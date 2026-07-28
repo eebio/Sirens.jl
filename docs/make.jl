@@ -16,16 +16,17 @@ PAGES = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
     "Examples" => [
-        "examples/surrogates.md",
-        #"examples/mtk.md",
         "examples/duplicated_components.md",
         "examples/advanced_duplicated_components.md",
+        "examples/surrogates.md",
+        #"examples/mtk.md",
         #"examples/out_of_sync.md",
         #"examples/spatial_maps.md",
         #"examples/external_components.md",
     ],
     "Mermaid Interface" => "interface.md",
     "Is Mermaid right for me?" => "is_mermaid_right_for_me.md",
+    "FAQ" => "FAQ.md",
     "API" => "API.md"
 ]
 

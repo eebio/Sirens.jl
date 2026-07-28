@@ -158,7 +158,7 @@ SurrogateComponent
 SurrogateComponentIntegrator
 ```
 
-### Duplicated Components
+### [Duplicated Components](@id duplicatedComponentsAPI)
 
 ```@docs
 DuplicatedComponent

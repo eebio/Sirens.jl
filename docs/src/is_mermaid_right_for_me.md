@@ -29,4 +29,4 @@ Mermaid is also the only one of these written in Julia.
 
 Mermaid can also be viewed as a discrete event simulator (similar to other software like [SimPy](https://simpy.readthedocs.io/en/latest/) or [DiscreteEvents.jl](https://github.com/JuliaDynamics/DiscreteEvents.jl)).
 
-Here, the key difference is that Mermaid's focus in on hybrid systems (connecting discrete and continuous solvers). Mermaid already comes predefined with ways to setup many continuous systems, that would otherwise need to be handled by the user in other discrete event simulators.
+Here, the key difference is that Mermaid's focus is on hybrid systems (connecting discrete and continuous solvers). Mermaid already comes predefined with ways to setup many continuous systems, that would otherwise need to be handled by the user in other discrete event simulators.
