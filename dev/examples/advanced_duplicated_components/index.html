@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Advanced Duplicated Components · Mermaid.jl</title><meta name="title" content="Advanced Duplicated Components · Mermaid.jl"/><meta property="og:title" content="Advanced Duplicated Components · Mermaid.jl"/><meta property="twitter:title" content="Advanced Duplicated Components · Mermaid.jl"/><meta name="description" content="Documentation for Mermaid.jl."/><meta property="og:description" content="Documentation for Mermaid.jl."/><meta property="twitter:description" content="Documentation for Mermaid.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/logo.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="Mermaid.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Mermaid.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../duplicated_components/">Duplicated Components</a></li><li class="is-active"><a class="tocitem" href>Advanced Duplicated Components</a><ul class="internal"><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#Flexible-Duplicated-Components"><span>Flexible Duplicated Components</span></a></li><li><a class="tocitem" href="#Solving-and-visualisation"><span>Solving and visualisation</span></a></li></ul></li><li><a class="tocitem" href="../surrogates/">Surrogates</a></li></ul></li><li><a class="tocitem" href="../../interface/">Mermaid Interface</a></li><li><a class="tocitem" href="../../is_mermaid_right_for_me/">Is Mermaid right for me?</a></li><li><a class="tocitem" href="../../FAQ/">FAQ</a></li><li><a class="tocitem" href="../../API/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Advanced Duplicated Components</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Advanced Duplicated Components</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/eebio/Mermaid.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/eebio/Mermaid.jl/blob/main/docs/src/examples/advanced_duplicated_components.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Advanced-Duplicated-Components"><a class="docs-heading-anchor" href="#Advanced-Duplicated-Components">Advanced Duplicated Components</a><a id="Advanced-Duplicated-Components-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-Duplicated-Components" title="Permalink"></a></h1><p>You may have seen us use duplicated components in the <a href="../../tutorial/#Tutorial">Tutorial</a>. This is a very powerful tool that lets you efficiently create many instances of a component integrator, each with their own state that can be stepped independently. In the <a href="../../tutorial/#Tutorial">Tutorial</a>, we used duplicated components to create lots of instances of the tree ODE model, so every tree could be tracked independently. Rather than creating 640 components, each with its own integrator - we create 640 state vectors, reducing the memory requirements for the duplicated component.</p><p>However, while this functionality is useful, it is not always possible to specify the number of instances <em>a priori</em>. For example, we may have wanted trees that die to be removed from the simulation, or new trees to be created over time.</p><p>For this reason, it is also possible to create duplicated components with a variable/unknown number of instances.</p><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><p>For this example, we are going to create an agent-based model of a cell population with each cell governed by a simple growth model tracking protein mass, which depends on a spatial nutrient distribution and the number of nearby cells.</p><pre><code class="language-julia hljs">using OrdinaryDiffEq, Agents, Random, Mermaid, CairoMakie
+using LinearAlgebra: norm
+
+function cell!(du, u, p, t)
+    nutrients = u[1]
+    du[1] = 0
+    uptake = 2 * nutrients / (1 + nutrients)
+    decay = 0.1 * (1+u[2]/10)
+    du[2] = uptake - decay
+end
+
+u0 = [1.0, 1.0]
+tspan = (0.0, 250.0)
+prob = ODEProblem(cell!, u0, tspan)
+using Mermaid
+comp1 = DEComponent(prob, Rodas5P();
+    name=&quot;cell&quot;, state_names=Dict(&quot;nutrients&quot; =&gt; 1, &quot;mass&quot; =&gt; 2),
+)
+
+@agent struct Cell(ContinuousAgent{2,Float64})
+    mass::Float64 # Cell mass is informed by ODE model
+    nutrients::Float64 # Local nutrient availability
+end
+
+function colony(; n_cells=3, n_nodes=5, griddims=(40, 40), seed=2)
+    space = ContinuousSpace(griddims; periodic=true)
+    rng = Random.MersenneTwister(seed)
+    nodes = [rand(2) .* griddims for _ in 1:n_nodes]
+    colony = StandardABM(Cell, space; rng, (agent_step!)=cell_step!, properties=Dict(:nodes =&gt; nodes))
+    for _ in 1:n_cells
+        vel = rand(2) .- 0.5
+        mass = rand()
+        nutrients = rand()
+        add_agent!(colony, vel, 1, 1)
+    end
+    return colony
+end
+
+function wrap_periodic(pos, dims)
+    return SVector{length(pos)}(mod.(pos, dims))
+end
+
+function periodic_distance(a, b, dims)
+    # Computes minimum image distance between points a and b in periodic box of size dims
+    d = abs.(a .- b)
+    return norm(min.(d, dims .- d))
+end
+
+function nutrients(pos, colony)
+    nutrients = 0.0
+    spread = 7.0
+    dims = abmspace(colony).extent
+    for node in colony.nodes
+        # Calculate periodic distance to node
+        dist = periodic_distance(node, pos, dims)
+        nutrients += exp(-dist^2 / spread^2)/2 # Gaussian decay
+    end
+    return nutrients
+end
+
+function cell_step!(cell, colony)
+    # Move away from nearby agents
+    speed = 0.5
+    for cell2 in nearby_agents(cell, colony, 0.5)
+        cell.vel -= speed * (cell2.pos - cell.pos) / norm(cell2.pos - cell.pos)^2
+    end
+    # Max speed
+    if norm(cell.vel) &gt; speed
+        cell.vel = speed * cell.vel / norm(cell.vel)
+    end
+    # Walk and apply chemotaxis
+    oldnutrients = nutrients(cell.pos, colony)
+    walk!(cell, cell.vel, colony)
+    newnutrients = nutrients(cell.pos, colony)
+    if newnutrients &lt; oldnutrients
+        # If nutrients decrease, random direction on next iteration
+        cell.vel += rand(2) .- 0.5
+    end
+    # Update nutrients of cell, sharing between neighboring
+    cell.nutrients = nutrients(cell.pos, colony)/(length(collect(nearby_ids(cell, colony, 0.5)))+1)
+    # If large mass, split into two
+    splitmass = 15
+    if cell.mass &gt; splitmass
+        dims = abmspace(colony).extent
+        for m in (splitmass/2, cell.mass - splitmass/2)
+            new_pos = wrap_periodic(cell.pos + rand(2) .- 0.5, dims)
+            add_agent!(new_pos, colony; vel=cell.vel, mass=m, nutrients=0)
+        end
+        remove_agent!(cell, colony)
+    end
+    if cell.mass &lt; 0
+        remove_agent!(cell, colony)
+    end
+end
+
+pop = colony()
+
+comp2 = AgentsComponent(pop;
+    name=&quot;colony&quot;, state_names=Dict(&quot;mass&quot; =&gt; :mass, &quot;nutrients&quot; =&gt; :nutrients)
+)
+
+conn1 = Connector(inputs=[&quot;colony.nutrients&quot;], outputs=[&quot;cell.nutrients&quot;])
+conn2 = Connector(inputs=[&quot;cell.mass&quot;], outputs=[&quot;colony.mass&quot;])</code></pre><h2 id="Flexible-Duplicated-Components"><a class="docs-heading-anchor" href="#Flexible-Duplicated-Components">Flexible Duplicated Components</a><a id="Flexible-Duplicated-Components-1"></a><a class="docs-heading-anchor-permalink" href="#Flexible-Duplicated-Components" title="Permalink"></a></h2><p>If we don&#39;t provide any value for the <code>instances</code> field when creating the duplicated component, it will be created as a flexible duplicated component, letting a special input called <code>#ids</code> give the indexes of the current states (any indexes not specified in <code>#ids</code> are removed, and any state indexes specified in <code>#ids</code> that are not current states are created). Some components, like AgentComponents, already have pre-made special outputs for the <code>#ids</code> which we can use to couple duplicated components to an Agent-based model.</p><pre><code class="language-julia hljs">dup_comp = DuplicatedComponent(comp1, [];
+    default_state=u0,
+)
+conn3 = Connector(inputs=[&quot;colony.#ids&quot;], outputs=[&quot;cell.#ids&quot;])</code></pre><div class="admonition is-info" id="Sorting-of-Connectors-331797b055dc92f7"><header class="admonition-header">Sorting of Connectors<a class="admonition-anchor" href="#Sorting-of-Connectors-331797b055dc92f7" title="Permalink"></a></header><div class="admonition-body"><p>You may wonder about the order that connectors are applied. If we adjusted the IDs after applying <code>conn2</code>, we would be using an old value for IDs. Generally, we utilise the order specified in the MermaidProblem. For this reason, the <code>#ids</code> from <code>conn3</code> is applied first, as will be specified in the order of the connectors vector.</p></div></div><h2 id="Solving-and-visualisation"><a class="docs-heading-anchor" href="#Solving-and-visualisation">Solving and visualisation</a><a id="Solving-and-visualisation-1"></a><a class="docs-heading-anchor-permalink" href="#Solving-and-visualisation" title="Permalink"></a></h2><pre><code class="language-julia hljs">function make_nutrient_heatarray(colony; gridsize=(40, 40))
+    arr = zeros(Float64, gridsize...)
+    xs = range(0, stop=abmspace(colony).extent[1], length=gridsize[1])
+    ys = range(0, stop=abmspace(colony).extent[2], length=gridsize[2])
+    for (i, x) in enumerate(xs), (j, y) in enumerate(ys)
+        arr[i, j] = nutrients(SVector(x, y), colony)
+    end
+    return arr
+end
+
+fig, ax = abmplot(pop; agent_color=:black, agent_marker=:circle, agent_size=x-&gt;x.mass+3,
+    heatarray=make_nutrient_heatarray, heatkwargs=(colormap=:Greens_5,))
+io = VideoStream(fig; framerate=10)
+function plot_input(model)
+    empty!(ax)
+    abmplot!(ax, model; agent_color=:black, agent_marker=:circle, agent_size=x -&gt; x.mass + 3,
+        heatarray=make_nutrient_heatarray, heatkwargs=(colormap=:Greens_5,))
+    ax.title = &quot;Time: $(round(abmtime(model))), Population: $(nagents(model))&quot;
+    recordframe!(io)
+end
+
+conn4 = Connector(
+    inputs=[&quot;colony.#model&quot;],
+    outputs=Vector{String}(),
+    func=(model) -&gt; plot_input(model)
+)
+
+mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn3, conn1, conn2, conn4], tspan=tspan)
+alg = MinimumTimeStepper()
+sol = solve(mp, alg)
+
+save(&quot;cell_colony.mp4&quot;, io)</code></pre><p><video src="../cell_colony.mp4" controls="true" title="An animation of the cell colony simulation"><a href="../cell_colony.mp4">An animation of the cell colony simulation</a></video></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../duplicated_components/">« Duplicated Components</a><a class="docs-footer-nextpage" href="../surrogates/">Surrogates »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 28 July 2026 11:30">Tuesday 28 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
