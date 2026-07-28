@@ -7,24 +7,39 @@ using DiffEqBase
 
 """
     MOLComponent(model::DiffEqBase.AbstractDEProblem, alg::DiffEqBase.AbstractDEAlgorithm;
-                 name::String="MOL Component", timestep::Real=1.0, intkwargs::Tuple=(),
+                 name::String="MOL", timestep::Real=1.0, intkwargs::Tuple=(),
                  state_names::Dict{String,Any}=Dict{String,Any}())
 
+A Mermaid component that wraps a Method of Lines discretized PDE as a SciML
+    DifferentialEquations problem.
+
 # Arguments
-- `model::DiffEqBase.AbstractDEProblem`: SciML DE problem (e.g., ODEProblem, etc.)
+- `model::DiffEqBase.AbstractDEProblem`: The SciML Differential Equations problem (e.g.,
+    ODEProblem, etc.) from MethodOfLines discretization.
 - `alg::DiffEqBase.AbstractDEAlgorithm`: Algorithm from DifferentialEquations.jl to be used
     for solving the DEProblem.
 
 # Keyword Arguments
-- `name::AbstractString`: Name of the component. Defaults to "MOL Component".
+- `name::AbstractString`: Name of the component. Defaults to "MOL".
 - `timestep::Real`: Time step for the component. Defaults to 1.0.
 - `intkwargs`: Additional keyword arguments for the DE solver. Defaults to no keywords.
 - `state_names`: Dictionary mapping variable names (as strings) to their corresponding
     indices in the state vector or symbols from Symbolics.jl. Defaults to an empty
-    dictionary.
+    dictionary. For PDEs with spatial discretization, map logical variable names
+    (e.g., \"concentration\") to state vector indices or ranges.
+
+# Special Variables
+- `#time`: The current time (`integrator.t`).
+- `#state`: The full discretized state vector (`integrator.u`).
+- `#integrator`: The underlying DifferentialEquations.jl integrator object.
+
+# Notes
+MOLComponent is useful for connecting discretized PDEs to other models. When mapping
+between different spatial grids or resolutions (e.g., PDE grid to agent positions),
+use a connector function to perform interpolation or other spatial transformations.
 """
 function Mermaid.MOLComponent(model::DiffEqBase.AbstractDEProblem,
-        alg::DiffEqBase.AbstractDEAlgorithm; name = "MOL Component",
+        alg::DiffEqBase.AbstractDEAlgorithm; name = "MOL",
         timestep::Real = 1.0, intkwargs = (), state_names = Dict{String, Any}())
     return Mermaid.MOLComponent(model, name, state_names, timestep, alg, intkwargs)
 end
@@ -43,6 +58,10 @@ function Mermaid.getstate(compInt::MOLComponentIntegrator, key)
     if first(key.variable) == '#'
         if key.variable == "#time"
             return compInt.integrator.t
+        elseif key.variable == "#integrator"
+            return compInt.integrator
+        elseif key.variable == "#state"
+            return compInt.integrator.u
         end
     end
     if isnothing(key.variableindex)
@@ -65,6 +84,12 @@ function Mermaid.setstate!(compInt::MOLComponentIntegrator, key, value)
     if first(key.variable) == '#'
         if key.variable == "#time"
             compInt.integrator.t = value
+            return nothing
+        elseif key.variable == "#integrator"
+            compInt.integrator = value
+            return nothing
+        elseif key.variable == "#state"
+            compInt.integrator.u = value
             return nothing
         end
     end
@@ -92,7 +117,7 @@ function Mermaid.setstate!(compInt::MOLComponentIntegrator, value)
 end
 
 function Mermaid.variables(component::MOLComponent)
-    return union(keys(component.state_names), ["#time"])
+    return union(keys(component.state_names), ["#time", "#integrator", "#state"])
 end
 
 end

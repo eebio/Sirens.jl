@@ -151,7 +151,7 @@ end
     integrator = init(c1)
 
     @test issetequal(variables(integrator),
-        ["min_to_be_happy", "group", "mood", "list_property", "#model", "#time"])
+        ["min_to_be_happy", "group", "mood", "list_property", "#model", "#time", "#ids"])
 
     # Check initial state
     @test getstate(integrator, ConnectedVariable("Schelling.min_to_be_happy")) == 3.0
@@ -292,7 +292,7 @@ end
     integrator = init(c1)
 
     @test issetequal(variables(integrator),
-        ["min_to_be_happy", "group", "mood", "list_property", "#model", "#time"])
+        ["min_to_be_happy", "group", "mood", "list_property", "#model", "#time", "#ids"])
 
     # Check initial state
     @test getstate(integrator, ConnectedVariable("Schelling.min_to_be_happy")) == 3.0

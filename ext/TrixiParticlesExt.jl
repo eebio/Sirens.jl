@@ -8,9 +8,11 @@ using OrderedCollections: OrderedDict
 
 """
     TrixiParticlesComponent(semi::TrixiParticles.Semidiscretization, alg;
-                name::String="TrixiParticles Component", timestep::Float64=1.0,
+                name::String="TrixiParticles", timestep::Float64=1.0,
                 intkwargs::Tuple=(), tspan=(0.0, Inf),
                 state_names::Dict{String,Any}=Dict{String,Any}())
+
+A Mermaid component that wraps a TrixiParticles.jl particle method simulation.
 
 # Arguments
 - `semi::TrixiParticles.Semidiscretization`: TrixiParticles semidiscretization object.
@@ -18,19 +20,26 @@ using OrderedCollections: OrderedDict
     DynamicalODEProblem.
 
 # Keyword Arguments
-- `name::AbstractString`: Name of the component. Defaults to "TrixiParticles Component".
+- `name::AbstractString`: Name of the component. Defaults to "TrixiParticles".
 - `timestep::Real`: Time step for the component. Defaults to 1.0.
 - `intkwargs`: Additional keyword arguments for the DE solver. Defaults to no keywords.
 - `tspan`: Time span for the simulation. Defaults to (0.0, Inf).
 - `state_names`: Dictionary mapping variable names (as strings) to their corresponding
     indices in the state vector or symbols from Symbolics.jl. Defaults to an empty
-    dictionary.
+    dictionary. Typically maps particle positions, velocities, or properties.
+
+# Special Variables
+- `#time`: The current time (`integrator.t`).
+- `#state`: The full particle state vector (`integrator.u`).
+- `#integrator`: The underlying DifferentialEquations.jl integrator object.
+- `#semi`: The TrixiParticles semidiscretization object (read-only; cannot be used with `setstate!`).
 """
 function Mermaid.TrixiParticlesComponent(semi::TrixiParticles.Semidiscretization,
-        alg; name = "TrixiParticles Component", timestep::Real = 1.0, intkwargs = (),
+        alg; name = "TrixiParticles", timestep::Real = 1.0, intkwargs = (),
         tspan = (0.0, Inf), state_names = Dict{String, Any}())
     ode = semidiscretize(semi, tspan)
-    return Mermaid.TrixiParticlesComponent(ode, semi, name, state_names, timestep, alg, intkwargs)
+    return Mermaid.TrixiParticlesComponent(
+        ode, semi, name, state_names, timestep, alg, intkwargs)
 end
 
 function CommonSolve.init(c::Mermaid.TrixiParticlesComponent)
@@ -47,12 +56,12 @@ function Mermaid.getstate(compInt::Mermaid.TrixiParticlesComponentIntegrator, ke
     if first(key.variable) == '#'
         if key.variable == "#time"
             return compInt.integrator.t
-        end
-        if key.variable == "#semi"
+        elseif key.variable == "#semi"
             return compInt.component.semi
-        end
-        if key.variable == "#state"
+        elseif key.variable == "#state"
             return getstate(compInt)
+        elseif key.variable == "#integrator"
+            return compInt.integrator
         end
     end
     index = compInt.component.state_names[key.variable]
@@ -70,8 +79,10 @@ function Mermaid.setstate!(compInt::Mermaid.TrixiParticlesComponentIntegrator, k
             derivative_discontinuity!(compInt.integrator, true)
             compInt.integrator.t = value
             return nothing
-        end
-        if key.variable == "#state"
+        elseif key.variable == "#integrator"
+            compInt.integrator = value
+            return nothing
+        elseif key.variable == "#state"
             setstate!(compInt, value)
             return nothing
         end
@@ -86,7 +97,7 @@ function Mermaid.setstate!(compInt::Mermaid.TrixiParticlesComponentIntegrator, v
 end
 
 function Mermaid.variables(component::Mermaid.TrixiParticlesComponent)
-    return union(keys(component.state_names), ["#semi", "#time", "#state"])
+    return union(keys(component.state_names), ["#semi", "#time", "#state", "#integrator"])
 end
 
 end

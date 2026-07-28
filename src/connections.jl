@@ -26,16 +26,34 @@ end
 """
     ConnectedVariable(name::AbstractString)
 
-Construct a [ConnectedVariable](@ref) from a string name.
+Construct a [ConnectedVariable](@ref) from its canonical fullname.
 
 # Arguments
 - `name::AbstractString`: The full variable name.
 
+# Syntax and Examples
+
+Connected variables are specified as strings in one of these forms:
+
+| Syntax | Meaning |
+| --- | --- |
+| `component.variable` | A variable in a component |
+| `component.variable[i]` | An index into a variable |
+| `component[j].variable` | Instance `j` of a duplicated component |
+| `component[j].variable[i]` | Both kinds of indexing |
+
 # Examples
-`ConnectedVariable("comp.var")`
-`ConnectedVariable("comp.var[1:5]")` where 1:5 is the variableindex
-`ConnectedVariable("comp[2].var")` where 2 is the duplicatedindex
-`ConnectedVariable("comp[1:3].var[4]")`
+- `ConnectedVariable("comp.var")`: Variable `var` in component `comp`.
+- `ConnectedVariable("comp.var[1:5]")`: Variable indices 1 through 5 (variable index).
+- `ConnectedVariable("comp[2].var")`: Variable `var` from duplicated instance 2 (duplicated
+    index).
+- `ConnectedVariable("comp[1:3].var[4]")`: Variable index 4 from duplicated instances 1-3.
+
+# Parsing
+Indices are parsed as Julia expressions, so use literal integer indices and ranges:
+- `1` for a single index.
+- `1:5` for a range.
+- `[1, 3]` for a vector of indices.
 """
 function ConnectedVariable(name::AbstractString)
     # Parse the variable name to extract its parts
@@ -91,8 +109,43 @@ Construct a [Connector](@ref) from string names for inputs and outputs.
 - `outputs::Vector{<:AbstractString}`: Names of output variables.
 
 # Keyword Arguments
-- `func`: Function for mapping inputs to outputs. Defaults to `nothing` which passes a
-    single input, to all outputs.
+- `func`: Optional transformation function. Defaults to `nothing` (identity for single
+    input).
+
+# Connector Semantics
+
+# Input and Output Handling
+- Inputs are read in the order given by `inputs`.
+- With `func=nothing` and a single input, the input is passed unchanged to every output.
+- With `func=nothing` and multiple inputs, input values are collected into a vector.
+- With a function, Mermaid calls `func(input1, input2, ...)` using positional arguments.
+  The function receives input values in order, not a vector.
+- Output values (from `func` or the single input) are set to every output in order.
+
+# Connection Timing and Application
+A connector is only applied is the time of all inputs is earlier than the time of all
+    outputs.
+
+Connectors are applied before component steps.
+A connector does not automatically run again after a component step; it must become eligible
+at a subsequent event.
+
+# Mapping and Transformations
+The function (`func`) receives positional arguments for each input and must return
+a value compatible with every output:
+- Mermaid performs no automatic unit conversion, interpolation, broadcasting, or reshaping.
+- Spatial mapping between grids, coordinate systems, or resolutions must be explicit in
+    `func`.
+- For no-output connectors (side effects), the return value is ignored.
+
+# Variable and Duplicated Indices
+Variable indices (e.g., `[1:5]`) and duplicated indices (e.g., `[2]` in `comp[2].var`)
+are passed to component `getstate`/`setstate!` implementations:
+- For a duplicated component, duplicated index selects instances; variable index selects
+  parts of each instance's state. Both may be used together.
+- The exact shape of returned values depends on the component's indexing implementation.
+
+See also [MinimumTimeStepper](@ref).
 """
 function Connector(; inputs::Vector{T}, outputs::Vector{S},
         func = nothing) where {T <: AbstractString} where {S <: AbstractString}
@@ -159,12 +212,17 @@ end
 """
     runconnection!(merInt::AbstractMermaidIntegrator, conn::AbstractConnector)
 
-Extract all the input states from `merInt`, apply the connection function, and set the output
+Extract all input states from `merInt`, apply the connection function, and set output
 states in `merInt`.
 
 # Arguments
-- `merInt::AbstractMermaidIntegrator`: The Mermaid integrator containing the components.
-- `conn::AbstractConnector`: The connector defining the connection.
+- `merInt::AbstractMermaidIntegrator`: The Mermaid integrator containing components.
+- `conn::AbstractConnector`: The connector defining inputs, outputs, and transformation.
+
+# Behavior
+1. Calls `runconnection` to compute outputs.
+2. Sets each output value in the corresponding component via `setstate!`.
+3. Outputs are set in order; later outputs can depend on earlier ones if they share state.
 """
 function runconnection!(merInt::AbstractMermaidIntegrator, conn::AbstractConnector)
     outputs = runconnection(merInt, conn)

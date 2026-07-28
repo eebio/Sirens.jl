@@ -8,13 +8,13 @@ In this tutorial, we will:
 * Solve the hybrid model.
 * Visualise the results of the simulation.
 
-The example system we will use for this will be a model of a forest fire (governed by an Agent-based model), with the growth of each tree informed by an ODE model.
+This example will include a group of birds, flocking around some food at a single moving point, where the motion of the moving point is governed by an ODE system.
 
 ## Components
 
-To begin, we need to define our components. These will be an ODE model component for each tree, and an Agent-based model component for handling the forest level properties (in this case, the spread of heat/fire).
+To begin, we need to define our components. These will be an ODE model component for the movement of the food, and an Agent-based model component for the birds.
 
-### ODE Components
+### Differential Equations Components
 
 To define the ODE model, let's have a look at how to define an ODE Component.
 
@@ -26,14 +26,17 @@ We see that we need to define an `ODEProblem` to use in the component, so let's 
 
 ```@example tutorial
 using OrdinaryDiffEq
-function tree!(du, u, p, t)
-    heat, life = u
-    du[1] = 0
-    du[2] = (life*(1-life/10.0)-heat*life)/10
+function food!(du, u, p, t)
+    x, y = u
+    d = 10.0
+    mu = 1.3
+    tau = 30.0
+    du[1] = (y - 50)/tau
+    du[2] = (mu * (1 - (x-50)^2/d^2)*(y-50) - (x-50))/tau
 end
-u0 = [4.0, 2.0]
-tspan = (0.0, 150.0)
-prob = ODEProblem(tree!, u0, tspan)
+u0 = [40.0, 40.0]
+tspan = (0.0, 500.0)
+prob = ODEProblem(food!, u0, tspan)
 
 nothing #hide
 ```
@@ -44,26 +47,7 @@ For this, we will need to define the `state_names` field, and should generally p
 ```@example tutorial
 using Mermaid
 comp1 = DEComponent(prob, Rodas5P();
-    name="tree", state_names=Dict("heat" => 1, "life" => 2),
-)
-
-nothing #hide
-```
-
-### Duplicated Components
-
-Since the `ODEProblem` is defined for only a single tree, we can efficiently simulate time ODE system many times by generating a duplicated component.
-This component stores a single `ODEProblem` that it will solve across many different states.
-In this case, we can have a state for each tree in the Agent-based model.
-Let's have a look at how to define a [DuplicatedComponent](@ref).
-
-```@docs; canonical=false
-DuplicatedComponent
-```
-
-```@example tutorial
-dup_comp = DuplicatedComponent(comp1, [copy(u0) for _ in 1:640];
-    instances=640,
+    name="food", state_names=Dict("x" => 1, "y" => 2),
 )
 
 nothing #hide
@@ -80,49 +64,68 @@ AgentsComponent
 We can see that, again, we need to define the model (this time a `StandardABM` from `Agents.jl`), a `name` and a `state_names`.
 
 ```@example tutorial
-using Agents, Random, Statistics
-@agent struct Tree(GridAgent{2})
-    heat::Float64 # Heat is averaged across neighbors, passed to ODE model
-    life::Float64 # Life is informed by ODE model
+
+using Agents, Random, LinearAlgebra
+@agent struct Bird(ContinuousAgent{2, Float64})
+    const speed::Float64
+    const visual_distance::Float64
+    const turn_speed::Float64
 end
 
-function forest_fire(; density=0.4, griddims=(40, 40), seed=2)
-    space = GridSpaceSingle(griddims; periodic=false, metric=:chebyshev)
+function initialize_model(;
+        n_birds = 100,
+        speed = 1.0,
+        visual_distance = 15.0,
+        turn_speed = 0.04,
+        extent = (100, 100),
+        seed = 0
+)
+    space2d = ContinuousSpace(extent)
     rng = Random.MersenneTwister(seed)
-    forest = StandardABM(Tree, space; rng, agent_step! = tree_step!)
-    for _ in 1:floor(density * prod(griddims))
-        # Randomly place trees in the grid
-        add_agent_single!(forest; heat=rand(), life=rand())
+
+    props = Dict(:food_x => rand() * extent[1],
+        :food_y => rand()*extent[2])
+
+    model = StandardABM(
+        Bird, space2d; rng, agent_step!, container = Vector, properties = props)
+    for _ in 1:n_birds
+        vel = rand(abmrng(model), SVector{2}) * 2 .- 1
+        add_agent!(
+            model,
+            vel,
+            speed,
+            visual_distance,
+            turn_speed
+        )
     end
-    return forest
+    return model
 end
 
-function tree_step!(tree, forest)
-    nearbyheat = mean([getproperty(neighbor, :heat) for neighbor in nearby_agents(tree, forest, 1)])
-    if isnan(nearbyheat)
-        nearbyheat = 0.0
-    end
-    tree.heat = tree.heat * 0.9 + nearbyheat * 0.1
-    if rand(abmrng(forest)) < 1e-4 # Random chance of fire
-        tree.heat = 10.0
-    end
-    # Simulate tree life cycle
-    if tree.heat > 1.0 && tree.life > 1.0
-        # Tree on fire
-        tree.heat += 1.0
+function agent_step!(bird, model)
+    heading = get_direction(bird.pos, (model.food_x, model.food_y), model)
+
+    if sum(heading .^ 2) < bird.visual_distance^2
+        # Bird can see food so should head towards food
+        bird.vel += bird.turn_speed * heading
     else
-        # Tree not on fire so heat disappates
-        tree.heat -= 0.05
+        # Bird can't see food so should turn towards nearest bird
+        nearest_bird = nearest_neighbor(bird, model, bird.visual_distance)
+        if !isnothing(nearest_bird)
+            heading = get_direction(bird.pos, nearest_bird.pos, model)
+        else
+            heading = (0, 0)
+        end
+        bird.vel += bird.turn_speed * (heading .+ randn(abmrng(model), SVector{2}))
     end
-    if tree.heat < 0.0
-        tree.heat = 0.0
-    end
+    bird.vel /= norm(bird.vel)
+
+    return move_agent!(bird, model, bird.speed)
 end
 
-forest = forest_fire()
+model = initialize_model()
 
-comp2 = AgentsComponent(forest;
-    name="forest", state_names=Dict("heat" => :heat, "life" => :life)
+comp2 = AgentsComponent(model;
+    name = "birds", state_names = Dict("x" => :food_x, "y" => :food_y)
 )
 ```
 
@@ -134,11 +137,11 @@ We can now set up the connections between the variables in the two components.
 Connector
 ```
 
-The format for specifying a [ConnectedVariable](@ref) is given in [Mermaid Interface](@ref), but in short, it is a string containing a component name and a variable/state name. It can also contain optional indices for only accessing part of a variable (given at the end of the ConnectedVariable), or for only accessing some subcomponents, such as for DuplicatedComponents (given at the end of the component name).
+The format for specifying a [ConnectedVariable](@ref) is given in [Mermaid Interface](@ref), but in its simplest form, it is a string containing a component name and a variable/state name.
 
 ```@example tutorial
-conn1 = Connector(inputs=["forest.heat[1:640]"], outputs=["tree[1:640].heat"])
-conn2 = Connector(inputs=["tree[1:640].life"], outputs=["forest.life[1:640]"])
+conn1 = Connector(inputs=["food.x"], outputs=["birds.x"])
+conn2 = Connector(inputs=["food.y"], outputs=["birds.y"])
 ```
 
 ## Solving the hybrid model
@@ -151,7 +154,7 @@ MermaidProblem
 ```
 
 ```@example tutorial
-mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn1, conn2], tspan=tspan)
+mp = MermaidProblem(components=[comp1, comp2], connectors=[conn1, conn2], tspan=tspan)
 alg = MinimumTimeStepper()
 sol = solve(mp, alg)
 ```
@@ -168,8 +171,7 @@ MermaidSolution
 ```@example tutorial
 using Plots
 
-plot(sol.t, sol["forest.life[1]"], color=:green, label="Life")
-plot!(sol.t, sol["forest.heat[1]"], color=:red, label="Heat")
+plot(sol["food.x"], sol["food.y"], color=:green, label="Food trajectory")
 
 nothing # hide
 ```
@@ -177,8 +179,8 @@ nothing # hide
 ## Advanced Visualisations
 
 While we can plot the variables from the ODE component easily, the Agent-based model is a bit more challenging.
-But default, we only store the variables given in state\_names in the solution.
-This can be changed by providing `save_vars=["forest.#model"]` to `solve`, in which case the full Agent-based model state will be visable in the solution at all timepoints.
+By default, we only store the variables given in `state_names` in the solution.
+This can be changed by providing `save_vars=["birds.#model"]` to `solve`, in which case the full agent-based model state will be visible in the solution at all time points.
 
 !!! tip "#model and Special Variables"
     `"#model"` is a special variable for AgentsComponents. Special variables, denoted by starting with `#` are not saved by default but can be used with connectors, `getstate`, `setstate!`, or `save_vars`. To view the special variables of a component, you can call `variables(component)`.
@@ -187,31 +189,37 @@ However, this can be wasteful if we know we only want an animation of the model 
 We will set up a [Connector](@ref) which takes an input of the model's current state, and instead of a transformation, we will use a function which adds the current state to a video.
 
 ```@example tutorial
-using Makie
 using CairoMakie
 
-groupcolor(tree) = tree.heat > 1 ? :red : :green
-groupmarker(a) = a.life > 1 ? :utriangle : :circle
-fig, ax = abmplot(forest; agent_color=groupcolor, agent_marker=groupmarker, agent_size=10)
+const bird_polygon = Makie.Polygon(Point2f[(-1, -1), (2, 0), (-1, 1)])
+function bird_marker(b::Bird)
+    φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
+    return rotate_polygon(bird_polygon, φ)
+end
+
+fig, ax = abmplot(model; agent_marker = bird_marker)
+CairoMakie.scatter!(ax, [model.food_x], [model.food_y], markersize = 35, color = :green)
 io = VideoStream(fig)
 function plot_input(model)
     empty!(ax)
-    abmplot!(ax, model; agent_color=groupcolor, agent_marker=groupmarker, agent_size=10)
+    abmplot!(
+        ax, model; agent_marker = bird_marker)
+    CairoMakie.scatter!(ax, [model.food_x], [model.food_y], markersize = 35, color = :green)
     recordframe!(io)
 end
 
 conn3 = Connector(
-    inputs=["forest.#model"],
-    outputs=Vector{String}(),
-    func=(model) -> plot_input(model)
+    inputs = ["birds.#model"],
+    outputs = Vector{String}(),
+    func = (model) -> plot_input(model)
 )
 
-mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn1, conn2, conn3], tspan=tspan)
+mp = MermaidProblem(components = [comp1, comp2], connectors = [conn1, conn2, conn3], tspan = tspan)
 sol = solve(mp, alg)
 
-save("forest_fire.mp4", io)
+save("birds.mp4", io)
 
 nothing #hide
 ```
 
-![An animation of the forest fire simulation](forest_fire.mp4)
+![An animation of the bird-food simulation](birds.mp4)

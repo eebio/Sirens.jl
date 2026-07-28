@@ -3,7 +3,7 @@
 In this section, we will:
 
 * See the integrator interface that Mermaid uses,
-* Find out how this fits with [CommonSolve](@extref CommonSolve index),
+* Find out how this fits with [CommonSolve](@extref CommonSolve index).
 
 ## Interface requirements
 
@@ -34,7 +34,7 @@ It only stores the current state of that component, and has some associated func
 
 Most of the interface for Mermaid is built around functions that manipulate the integrator state.
 
-### step!
+### `step!`
 
 The `step!` function should advance the `ComponentIntegrator` one time step (defined by `timestep(ComponentIntegrator)`).
 
@@ -50,7 +50,7 @@ The `init` function takes as inputs a `Component` and returns the corresponding 
 init
 ```
 
-### getstate and setstate!
+### `getstate` and `setstate!`
 
 The function `getstate` reads the state of an `AbstractComponentIntegrator` at a given `ConnectedVariable` and returns it.
 The `setstate!` function similarly mutates the current state of the `ComponentIntegrator` to assign an inputted value to the `ConnectedVariable`.
@@ -63,7 +63,7 @@ getstate
 setstate!
 ```
 
-### gettime and settime!
+### `gettime` and `settime!`
 
 Simply returns the current simulated time of a `ComponentIntegrator`. Defaults to calling `getstate` and `setstate!` with the special variable `"#time"`.
 

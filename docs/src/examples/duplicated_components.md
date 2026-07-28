@@ -1,182 +1,193 @@
-# Advanced Duplicated Components
+# Duplicated Components
 
-You may have seen us use duplicated components in the [Tutorial](@ref).
-This is a very powerful tool that lets you efficiently create many instances of a component integrator, each with their own state that can be stepped independently.
-In the [Tutorial](@ref), we used duplicated components to create lots of instances of the tree ODE model, so every tree could be tracked independently.
-Rather than creating 640 components, each with its own integrator - we create 640 state vectors, reducing the memory requirements for the duplicated component.
+In this tutorial, we will introduce [DuplicatedComponents](@ref DuplicatedComponent).
 
-However, while this functionality is useful, it is not always possible to specify the number of instances *a priori*.
-For example, we may have wanted trees that die to be removed from the simulation, or new trees to be created over time.
+The example system we will use for this will be a model of a forest fire (governed by an Agent-based model), with the growth of each tree informed by an ODE model.
 
-For this reason, it is also possible to create duplicated components with a variable/unknown number of instances.
+## Components
 
-## Setup
+To begin, we need to define our components. These will be an ODE model component for each tree, and an Agent-based model component for handling the forest level properties (in this case, the spread of heat/fire).
 
-For this example, we are going to create an agent-based model of a cell population with each cell goverened by a simple growth model tracking protein mass which is dependent on a spatial nutrient distribution and the number of nearby cells.
+### ODE Component
 
-```@example dupcomp
-using OrdinaryDiffEq, Agents, Random, Mermaid, CairoMakie
-using LinearAlgebra: norm
-Random.seed!(1) # hide
+To define a [DuplicatedComponent](@ref), we first need to define the component we want to duplicate. In this case, it is a [DEComponent](@ref).
 
-function cell!(du, u, p, t)
-    nutrients = u[1]
-    du[1] = 0
-    uptake = 2 * nutrients / (1 + nutrients)
-    decay = 0.1 * (1+u[2]/10)
-    du[2] = uptake - decay
-end
-
-u0 = [1.0, 1.0]
-tspan = (0.0, 250.0)
-prob = ODEProblem(cell!, u0, tspan)
+```@example tutorial
+using OrdinaryDiffEq
 using Mermaid
+
+function tree!(du, u, p, t)
+    heat, life = u
+    du[1] = 0
+    du[2] = (life*(1-life/10.0)-heat*life)/10
+end
+u0 = [4.0, 2.0]
+tspan = (0.0, 150.0)
+prob = ODEProblem(tree!, u0, tspan)
+
 comp1 = DEComponent(prob, Rodas5P();
-    name="cell", state_names=Dict("nutrients" => 1, "mass" => 2),
+    name="tree", state_names=Dict("heat" => 1, "life" => 2),
 )
 
-@agent struct Cell(ContinuousAgent{2,Float64})
-    mass::Float64 # Cell mass is informed by ODE model
-    nutrients::Float64 # Local nutrient availability
+nothing #hide
+```
+
+### Duplicated Component
+
+Since the `ODEProblem` is defined for only a single tree, we can efficiently simulate the same ODE system many times by generating a duplicated component.
+This component stores a single `ODEProblem` that it will solve across many different states.
+In this case, we can have a state for each tree in the Agent-based model.
+Let's have a look at how to define a [DuplicatedComponent](@ref).
+
+```@docs; canonical=false
+DuplicatedComponent
+```
+
+```@example tutorial
+dup_comp = DuplicatedComponent(comp1, [copy(u0) for _ in 1:640];
+    instances=640,
+)
+
+nothing #hide
+```
+
+### Agents.jl Component
+
+Now that we have created our [DEComponent](@ref), we can move on to the [AgentsComponent](@ref), so let's have a look at its documentation.
+
+```@example tutorial
+using Agents, Random, Statistics
+@agent struct Tree(GridAgent{2})
+    heat::Float64 # Heat is averaged across neighbors, passed to ODE model
+    life::Float64 # Life is informed by ODE model
 end
 
-function colony(; n_cells=3, n_nodes=5, griddims=(40, 40), seed=2)
-    space = ContinuousSpace(griddims; periodic=true)
+function forest_fire(; density=0.4, griddims=(40, 40), seed=2)
+    space = GridSpaceSingle(griddims; periodic=false, metric=:chebyshev)
     rng = Random.MersenneTwister(seed)
-    nodes = [rand(2) .* griddims for _ in 1:n_nodes]
-    colony = StandardABM(Cell, space; rng, (agent_step!)=cell_step!, properties=Dict(:nodes => nodes))
-    for _ in 1:n_cells
-        vel = rand(2) .- 0.5
-        mass = rand()
-        nutrients = rand()
-        add_agent!(colony, vel, 1, 1)
+    forest = StandardABM(Tree, space; rng, agent_step! = tree_step!)
+    for _ in 1:floor(density * prod(griddims))
+        # Randomly place trees in the grid
+        add_agent_single!(forest; heat=rand(), life=rand())
     end
-    return colony
+    return forest
 end
 
-function wrap_periodic(pos, dims)
-    return SVector{length(pos)}(mod.(pos, dims))
-end
-
-function periodic_distance(a, b, dims)
-    # Computes minimum image distance between points a and b in periodic box of size dims
-    d = abs.(a .- b)
-    return norm(min.(d, dims .- d))
-end
-
-function nutrients(pos, colony)
-    nutrients = 0.0
-    spread = 7.0
-    dims = abmspace(colony).extent
-    for node in colony.nodes
-        # Calculate periodic distance to node
-        dist = periodic_distance(node, pos, dims)
-        nutrients += exp(-dist^2 / spread^2)/2 # Gaussian decay
+function tree_step!(tree, forest)
+    nearbyheat = mean([getproperty(neighbor, :heat) for neighbor in nearby_agents(tree, forest, 1)])
+    if isnan(nearbyheat)
+        nearbyheat = 0.0
     end
-    return nutrients
-end
-
-function cell_step!(cell, colony)
-    # Move away from nearby agents
-    speed = 0.5
-    for cell2 in nearby_agents(cell, colony, 0.5)
-        cell.vel -= speed * (cell2.pos - cell.pos) / norm(cell2.pos - cell.pos)^2
+    tree.heat = tree.heat * 0.9 + nearbyheat * 0.1
+    if rand(abmrng(forest)) < 1e-4 # Random chance of fire
+        tree.heat = 10.0
     end
-    # Max speed
-    if norm(cell.vel) > speed
-        cell.vel = speed * cell.vel / norm(cell.vel)
+    # Simulate tree life cycle
+    if tree.heat > 1.0 && tree.life > 1.0
+        # Tree on fire
+        tree.heat += 1.0
+    else
+        # Tree not on fire, so heat dissipates
+        tree.heat -= 0.05
     end
-    # Walk and apply chemotaxis
-    oldnutrients = nutrients(cell.pos, colony)
-    walk!(cell, cell.vel, colony)
-    newnutrients = nutrients(cell.pos, colony)
-    if newnutrients < oldnutrients
-        # If nutrients decrease, random direction on next iteration
-        cell.vel += rand(2) .- 0.5
-    end
-    # Update nutrients of cell, sharing between neighboring
-    cell.nutrients = nutrients(cell.pos, colony)/(length(collect(nearby_ids(cell, colony, 0.5)))+1)
-    # If large mass, split into two
-    splitmass = 15
-    if cell.mass > splitmass
-        dims = abmspace(colony).extent
-        for m in (splitmass/2, cell.mass - splitmass/2)
-            new_pos = wrap_periodic(cell.pos + rand(2) .- 0.5, dims)
-            add_agent!(new_pos, colony; vel=cell.vel, mass=m, nutrients=0)
-        end
-        remove_agent!(cell, colony)
-    end
-    if cell.mass < 0
-        remove_agent!(cell, colony)
+    if tree.heat < 0.0
+        tree.heat = 0.0
     end
 end
 
-pop = colony()
+forest = forest_fire()
 
-comp2 = AgentsComponent(pop;
-    name="colony", state_names=Dict("mass" => :mass, "nutrients" => :nutrients)
+comp2 = AgentsComponent(forest;
+    name="forest", state_names=Dict("heat" => :heat, "life" => :life)
 )
+```
 
-conn1 = Connector(inputs=["colony.nutrients"], outputs=["cell.nutrients"])
-conn2 = Connector(inputs=["cell.mass"], outputs=["colony.mass"])
+## Connections
+
+We can now set up the connections between the variables in the two components.
+
+```@docs; canonical=false
+Connector
+```
+
+The format for specifying a [ConnectedVariable](@ref) is given in [Mermaid Interface](@ref), but in short, it is a string containing a component name and a variable/state name. It can also contain optional indices for only accessing part of a variable (given at the end of the ConnectedVariable), or for only accessing some subcomponents, such as for DuplicatedComponents (given at the end of the component name).
+
+```@example tutorial
+conn1 = Connector(inputs=["forest.heat[1:640]"], outputs=["tree[1:640].heat"])
+conn2 = Connector(inputs=["tree[1:640].life"], outputs=["forest.life[1:640]"])
+```
+
+## Solving the hybrid model
+
+To create the hybrid model, we need to create a [MermaidProblem](@ref).
+We can then solve this using the `CommonSolve` interface.
+
+```@docs; canonical=false
+MermaidProblem
+```
+
+```@example tutorial
+mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn1, conn2], tspan=tspan)
+alg = MinimumTimeStepper()
+sol = solve(mp, alg)
+```
+
+## Plotting the solution
+
+After running `solve`, we get `sol`, a [MermaidSolution](@ref) instance.
+This stores all variables given in `state_names` at each timepoint.
+
+```@docs; canonical=false
+MermaidSolution
+```
+
+```@example tutorial
+using Plots
+
+plot(sol.t, sol["forest.life[1]"], color=:green, label="Life")
+plot!(sol.t, sol["forest.heat[1]"], color=:red, label="Heat")
 
 nothing # hide
 ```
 
-## Flexible Duplicated Components
+## Advanced Visualisations
 
-If we don't provide any value for the `instances` field when creating the duplicated component, it will be created as a flexible duplicated component, letting a special input called `#ids` give the indexes of the current states (any indexes not specified in `#ids` are removed, and any state indexes specified in `#ids` that are not current states are created).
-Some components, like AgentComponents, already have pre-made special outputs for the `#ids` which we can use to couple duplicated components to an Agent-based model.
+While we can plot the variables from the ODE component easily, the Agent-based model is a bit more challenging.
+By default, we only store the variables given in `state_names` in the solution.
+This can be changed by providing `save_vars=["forest.#model"]` to `solve`, in which case the full agent-based model state will be visible in the solution at all time points.
 
-```@example dupcomp
-dup_comp = DuplicatedComponent(comp1, [];
-    default_state=u0,
-)
-conn3 = Connector(inputs=["colony.#ids"], outputs=["cell.#ids"])
+!!! tip "#model and Special Variables"
+    `"#model"` is a special variable for AgentsComponents. Special variables, denoted by starting with `#` are not saved by default but can be used with connectors, `getstate`, `setstate!`, or `save_vars`. To view the special variables of a component, you can call `variables(component)`.
 
-nothing # hide
-```
+However, this can be wasteful if we know we only want an animation of the model (which can be generated during simulation).
+We will set up a [Connector](@ref) which takes an input of the model's current state, and instead of a transformation, we will use a function which adds the current state to a video.
 
-!!! note "Sorting of Connectors"
-    You may wonder about the order that connectors are applied. If we adjusted the IDs after applying `conn2`, we would be using an old value for IDs. Generally, we utilise the order specified in the MermaidProblem. For this reason, the `#ids` from `conn3` is applied first, as will be specified in the order of the connectors vector.
+```@example tutorial
+using Makie
+using CairoMakie
 
-## Solving and visualisation
-
-```@example dupcomp
-function make_nutrient_heatarray(colony; gridsize=(40, 40))
-    arr = zeros(Float64, gridsize...)
-    xs = range(0, stop=abmspace(colony).extent[1], length=gridsize[1])
-    ys = range(0, stop=abmspace(colony).extent[2], length=gridsize[2])
-    for (i, x) in enumerate(xs), (j, y) in enumerate(ys)
-        arr[i, j] = nutrients(SVector(x, y), colony)
-    end
-    return arr
-end
-
-fig, ax = abmplot(pop; agent_color=:black, agent_marker=:circle, agent_size=x->x.mass+3,
-    heatarray=make_nutrient_heatarray, heatkwargs=(colormap=:Greens_5,))
-io = VideoStream(fig; framerate=10)
+groupcolor(tree) = tree.heat > 1 ? :red : :green
+groupmarker(a) = a.life > 1 ? :utriangle : :circle
+fig, ax = abmplot(forest; agent_color=groupcolor, agent_marker=groupmarker, agent_size=10)
+io = VideoStream(fig)
 function plot_input(model)
     empty!(ax)
-    abmplot!(ax, model; agent_color=:black, agent_marker=:circle, agent_size=x -> x.mass + 3,
-        heatarray=make_nutrient_heatarray, heatkwargs=(colormap=:Greens_5,))
-    ax.title = "Time: $(round(abmtime(model))), Population: $(nagents(model))"
+    abmplot!(ax, model; agent_color=groupcolor, agent_marker=groupmarker, agent_size=10)
     recordframe!(io)
 end
 
-conn4 = Connector(
-    inputs=["colony.#model"],
+conn3 = Connector(
+    inputs=["forest.#model"],
     outputs=Vector{String}(),
     func=(model) -> plot_input(model)
 )
 
-mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn3, conn1, conn2, conn4], tspan=tspan)
-alg = MinimumTimeStepper()
+mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn1, conn2, conn3], tspan=tspan)
 sol = solve(mp, alg)
 
-save("cell_colony.mp4", io)
+save("forest_fire.mp4", io)
 
-nothing # hide
+nothing #hide
 ```
 
-![An animation of the cell colony simulation](cell_colony.mp4)
+![An animation of the forest fire simulation](forest_fire.mp4)

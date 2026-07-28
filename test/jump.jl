@@ -218,4 +218,25 @@ end
 
     setstate!(int, [700, 20, 10])
     @test getstate(int) == [700, 20, 10]
+
+    # Test special variable #state
+    @test "#state" in variables(int)
+    state_via_special = getstate(int, ConnectedVariable("SIR.#state"))
+    @test state_via_special == [700, 20, 10]
+    @test state_via_special isa Vector
+    setstate!(int, ConnectedVariable("SIR.#state"), [500, 50, 100])
+    @test getstate(int) == [500, 50, 100]
+    @test getstate(int, ConnectedVariable("SIR.#state")) == [500, 50, 100]
+
+    # Test special variable #integrator
+    @test "#integrator" in variables(int)
+    integrator_copy = getstate(int, ConnectedVariable("SIR.#integrator"); copy = true)
+    @test typeof(integrator_copy) <: JumpProcesses.SSAIntegrator
+    @test integrator_copy.u == [500, 50, 100]
+    # Modify and step
+    step!(int)
+    old_state = getstate(int)
+    # Restore integrator state
+    setstate!(int, ConnectedVariable("SIR.#integrator"), integrator_copy)
+    @test getstate(int) == [500, 50, 100]
 end

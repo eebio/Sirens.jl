@@ -166,7 +166,7 @@ end
     )
     integrator = init(c1)
 
-    @test issetequal(variables(integrator), ["prey", "predator", "#time"])
+    @test issetequal(variables(integrator), ["prey", "predator", "#time", "#integrator", "#state"])
 
     # Check initial state
     @test getstate(integrator, ConnectedVariable("Lotka-Volterra.prey")) == 4.0
@@ -208,4 +208,14 @@ end
     @test getstate(integrator) ≠ int2.u
     setstate!(integrator, ConnectedVariable("Lotka-Volterra.#integrator"), int2)
     @test getstate(integrator) == int2.u
+
+    # Test special variable #state
+    @test "#state" in variables(integrator)
+    state_via_special = getstate(integrator, ConnectedVariable("Lotka-Volterra.#state"))
+    @test state_via_special == int2.u
+    @test state_via_special isa Vector
+    new_state = [2.5, 1.5]
+    setstate!(integrator, ConnectedVariable("Lotka-Volterra.#state"), new_state)
+    @test getstate(integrator, ConnectedVariable("Lotka-Volterra.#state")) == new_state
+    @test getstate(integrator) == new_state
 end

@@ -120,7 +120,7 @@ end
     @test issetequal(keys(sol.u),
         ConnectedVariable.([
             "Schelling.min_to_be_happy", "Schelling.list_property", "Schelling.mood",
-            "Schelling.group", "Schelling.#model", "Schelling.#time"
+            "Schelling.group", "Schelling.#model", "Schelling.#time", "Schelling.#model", "Schelling.#ids"
         ]))
     sol = solve(mp, alg)
     @test issetequal(keys(sol.u),
@@ -135,6 +135,23 @@ end
         ConnectedVariable.([
             "Schelling.list_property", "Schelling.#model",
         ]))
+
+    # Test interpolation with non-numeric types (constant interpolation)
+    sol = solve(mp, alg; save_vars = :all, saveat = 2)
+    @test length(sol.t) == 6  # [0, 2, 4, 6, 8, 10]
+    # For non-numeric types like #model, interpolation should use constant interpolation
+    # (returning the state from the last saved time point)
+    interpolated_sol = sol(3.0)  # Between sol.t[1]=2 and sol.t[2]=4
+    model_at_2 = sol["Schelling.#model"][2]
+    model_at_3 = interpolated_sol["Schelling.#model"]
+    # Constant interpolation: model at time 3 should be the same object as model at time 2
+    @test model_at_3 === model_at_2
+    # Verify numeric types still use linear interpolation
+    list_prop_at_2 = sol["Schelling.list_property"][2]
+    list_prop_at_3 = interpolated_sol["Schelling.list_property"]
+    list_prop_at_4 = sol["Schelling.list_property"][3]
+    # For numeric types, should interpolate: at t=3 (halfway), should be (value@2 + value@4) / 2
+    @test list_prop_at_3 ≈ (list_prop_at_2 .+ list_prop_at_4) ./ 2
 end
 
 @testitem "mermaid integrator" begin

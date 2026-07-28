@@ -7,6 +7,9 @@ struct DEComponent{A, B, C, D, E, F} <: AbstractTimeDependentComponent
     intkwargs::F
 end
 
+"""
+$(TYPEDEF)
+"""
 mutable struct DEComponentIntegrator{A, B} <: AbstractComponentIntegrator
     integrator::A
     component::B
@@ -21,6 +24,9 @@ struct JumpComponent{A, B, C, D, E, F} <: AbstractTimeDependentComponent
     intkwargs::F
 end
 
+"""
+$(TYPEDEF)
+"""
 mutable struct JumpComponentIntegrator{A, B} <: AbstractComponentIntegrator
     integrator::A
     component::B
@@ -36,6 +42,9 @@ struct TrixiParticlesComponent{A, B, C, D, E, F, G} <: AbstractTimeDependentComp
     intkwargs::G
 end
 
+"""
+$(TYPEDEF)
+"""
 mutable struct TrixiParticlesComponentIntegrator{A, B} <: AbstractComponentIntegrator
     integrator::A
     component::B
@@ -48,6 +57,9 @@ struct AgentsComponent{A, B, C, D} <: AbstractTimeDependentComponent
     timestep::D
 end
 
+"""
+$(TYPEDEF)
+"""
 mutable struct AgentsComponentIntegrator{A, B} <: AbstractComponentIntegrator
     integrator::A
     time::Float64
@@ -63,6 +75,9 @@ struct MOLComponent{A, B, C, D, E, F} <: AbstractTimeDependentComponent
     intkwargs::F
 end
 
+"""
+$(TYPEDEF)
+"""
 mutable struct MOLComponentIntegrator{A, B} <: AbstractComponentIntegrator
     integrator::A
     component::B
@@ -80,6 +95,9 @@ struct SurrogateComponent{A, B, C, D, E, F, G, H, I} <: AbstractTimeDependentCom
     kwargs::I
 end
 
+"""
+$(TYPEDEF)
+"""
 mutable struct SurrogateComponentIntegrator{A, B, C, D, E} <: AbstractComponentIntegrator
     integrator::A
     component::B

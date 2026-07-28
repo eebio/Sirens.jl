@@ -1,9 +1,31 @@
 using CommonSolve
 
 """
-    MinimumTimeStepper()
+    MinimumTimeStepper() <: AbstractMermaidSolver
 
-A solver that steps the integrators in a `MermaidIntegrator` advancing to the next event.
+A solver that advances the Mermaid integrator by stepping to the next event.
+
+# Algorithm
+The minimum stepper chooses the smallest upcoming value of `(local_time + timestep) * timescale`
+across all components. It then:
+
+1. Applies connectors whose input global times are no later than their output global times.
+2. Steps all components whose next local event reaches the new global time.
+3. Adjusts component times after stepping to mitigate floating-point roundoff accumulation.
+
+# Timestepping and Multirate Behavior
+For component `i` with timescale `s_i`, the global time is `t_global = s_i * t_local`.
+
+The minimum stepper guarantees that possible connection applications cannot be jumped over.
+If the method synchronized at different timepoints, a connection that could have been
+applied if time were treated continuously might be missed.
+
+# Connections
+Connections use the most recently available state at each synchronization event. They do
+not interpolate between component states and do not guarantee identical local times across
+components.
+
+See also [Connector](@ref).
 """
 struct MinimumTimeStepper <: AbstractMermaidSolver
 end

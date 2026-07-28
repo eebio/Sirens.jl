@@ -43,6 +43,27 @@ Duplicate an existing component into a [DuplicatedComponent](@ref).
     variables in the original component. Defaults to the original component's state names.
 - `default_state`: The default state to use when a new instance is created. Defaults to a
     zero vector of the same length as the first initial state.
+
+# Special Variables
+- `#time`: Passed to the duplicated component.
+- `#ids`: Current integer IDs in current state order.
+- `#states`: Complete vector of all instance states.
+- `#init_states`: Initial states used when an ID is first created.
+
+# ID Semantics
+When `#ids` is set via a connector, Mermaid compares it against the previous value:
+- Existing IDs retain their states.
+- Missing IDs are removed.
+- New IDs receive a copy of the matching `#init_states` entry or `default_state`.
+- The order of the `#ids` matches the order of the `#states` vector.
+
+Duplicated indices in connections (e.g., `comp[1:3].var`) can select specific ID or ID
+    ranges.
+
+# Fixed vs. Flexible Instances
+- With a fixed `instances` value, `#ids` initialize as `1:instances`.
+- With `instances=nothing`, the component is flexible and initially has no IDs; connect
+  its `#ids` variable to create and remove states.
 """
 function DuplicatedComponent(component::AbstractTimeDependentComponent,
         init_states::AbstractVector; instances::Union{Int, Nothing} = nothing,
@@ -53,6 +74,9 @@ function DuplicatedComponent(component::AbstractTimeDependentComponent,
         state_names, default_state)
 end
 
+"""
+$(TYPEDEF)
+"""
 mutable struct DuplicatedComponentIntegrator{T <: AbstractComponentIntegrator, U, V} <:
                AbstractComponentIntegrator
     integrator::T
@@ -101,18 +125,20 @@ function getstate(compInt::DuplicatedComponentIntegrator, key)
             return compInt.init_states
         end
     end
-    out = Vector{Any}(nothing, length(compInt.ids))
     if isnothing(key.duplicatedindex)
-        index = eachindex(compInt.ids)
+        ids = compInt.ids
     else
-        index = key.duplicatedindex
+        ids = key.duplicatedindex
     end
-    for i in index
-        setstate!(compInt.integrator, compInt.states[i])
+    out = Vector{Any}(nothing, length(ids))
+    for i in eachindex(ids)
+        id = ids[i]
+        index = findfirst(==(id), compInt.ids)
+        setstate!(compInt.integrator, compInt.states[index])
         newkey = ConnectedVariable(key.component, key.variable, key.variableindex, nothing)
         out[i] = getstate(compInt.integrator, newkey)
     end
-    return out[index]
+    return out
 end
 
 function setstate!(compInt::DuplicatedComponentIntegrator, key, value)
@@ -156,13 +182,16 @@ function setstate!(compInt::DuplicatedComponentIntegrator, key, value)
         ids = key.duplicatedindex
     end
     for i in eachindex(ids)
-        setstate!(compInt.integrator, compInt.states[i])
+        id = ids[i]
+        index = findfirst(==(id), compInt.ids)
+        setstate!(compInt.integrator, compInt.states[index])
         newkey = ConnectedVariable(key.component, key.variable, nothing, nothing)
         setstate!(compInt.integrator, newkey, value[i])
-        compInt.states[i] = getstate(compInt.integrator)
+        compInt.states[index] = getstate(compInt.integrator)
     end
 end
 
 function variables(component::DuplicatedComponent)
-    return variables(component.component)
+    return union(variables(component.component), [
+        "#time", "#ids", "#states", "#init_states"])
 end

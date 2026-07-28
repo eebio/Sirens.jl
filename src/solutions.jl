@@ -6,6 +6,29 @@ Stores the solution of a [MermaidProblem](@ref) over time.
 # Fields
 - `t::X`: Time points at which the solution is saved.
 - `u::Y`: Dictionary mapping variables to their solution arrays.
+
+# Interpolation
+
+A solution can be interpolated at arbitrary times using callable syntax:
+
+```julia
+(sol::AbstractMermaidSolution)(t::Real)
+```
+
+This returns a new `MermaidSolution` with interpolated states at time `t`.
+
+**Interpolation Rules:**
+- For numeric states and numeric arrays: Uses linear interpolation between saved time points.
+- For non-numeric states (e.g., Agents.jl models, objects): Uses constant interpolation
+    (returns the state from the last saved time point before or at `t`).
+
+The time `t` must be within `[sol.t[1], sol.t[end]]`, otherwise a `BoundsError` is thrown.
+
+# Examples
+
+```julia
+sol(2.5)  # Interpolate solution at time t=2.5
+```
 """
 struct MermaidSolution{X, Y} <: AbstractMermaidSolution
     t::X
@@ -61,12 +84,21 @@ Get the solution for a variable `var` or at a time index `index` from a
 
 # Arguments
 - `sol::AbstractMermaidSolution`: The solution object.
-- `var::Union{AbstractString, AbstractConnectedVariable}`: The variable name.
-- `index::Int`: The time index of the variable.
+- `var::Union{AbstractString, AbstractConnectedVariable}`: The variable name, optionally
+    with indices like `\"comp.var[1:3]\"` or `\"comp[2].var[4]\"`.
+- `index::Int`: The time index (1-based) into the saved times.
 
 # Returns
-- If `var` is provided, returns the [MermaidSolution](@ref) for that variable.
-- If `index` is provided, returns the [MermaidSolution](@ref) at time `sol.t[index]`.
+- If `var` is provided, returns a vector of saved states for that variable across all times.
+- If `index` is provided, returns a new [MermaidSolution](@ref) containing only the data
+    at that time index for each variable.
+
+# Examples
+```julia
+sol[\"comp.var\"]        # All saved states for variable \"comp.var\"
+sol[ConnectedVariable(\"comp[1].var\")]  # States for duplicated instance 1
+sol[3]                 # Solution data at the 3rd saved time point
+```
 """
 function Base.getindex(sol::AbstractMermaidSolution, var::AbstractString)
     var = ConnectedVariable(var)
@@ -112,17 +144,26 @@ function Base.getindex(sol::AbstractMermaidSolution, index::Integer)
 end
 
 """
-(sol::MermaidSolution)(t::Real)
+    (sol::AbstractMermaidSolution)(t::Real)
 
-Interpolates the solution at a given time `t` using linear interpolation.
+Interpolate the solution at a given time `t` using linear interpolation where possible.
 
 # Arguments
-- `sol::MermaidSolution`: The solution object containing time points and state histories.
-- `t::Real`: The time at which to interpolate the solution.
+- `sol::AbstractMermaidSolution`: The solution object containing time points and state histories.
+- `t::Real`: The time at which to interpolate the solution. Must be within `[sol.t[1], sol.t[end]]`.
 
 # Returns
-- `MermaidSolution`: A new [MermaidSolution](@ref) object containing only that time and the
-    interpolated time and state.
+- `AbstractMermaidSolution`: A new [MermaidSolution](@ref) object containing the interpolated state at time `t`.
+
+# Interpolation Rules
+- For numeric states and numeric arrays: Uses linear interpolation between saved time points.
+- For non-numeric states (e.g., Agents.jl models, objects): Uses constant interpolation
+    (returns the state from the last saved time point before or at `t`).
+
+# Examples
+```julia
+sol(2.5)  # Interpolate solution at time t=2.5
+```
 """
 function (sol::AbstractMermaidSolution)(t::Real)
     if t < sol.t[1] || t > sol.t[end]
@@ -132,7 +173,14 @@ function (sol::AbstractMermaidSolution)(t::Real)
         ))
     end
     function interpolate_state(state1, state2, alpha)
-        return state1 .+ alpha .* (state2 .- state1)
+        interp_state1 = (state1 isa AbstractArray && eltype(state1) <: Number) ||
+                        (state1 isa Number)
+        interp_state2 = (state2 isa AbstractArray && eltype(state2) <: Number) ||
+                        (state2 isa Number)
+        if interp_state1 && interp_state2
+            return state1 .+ alpha .* (state2 .- state1)
+        end
+        return state1
     end
     lb = findlast(x -> x <= t, sol.t)
     ub = findfirst(x -> x >= t, sol.t)

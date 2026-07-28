@@ -1,7 +1,7 @@
 using Documenter, Mermaid, CommonSolve
 using DocumenterInterLinks
 # Load extensions to be documented
-using Agents, OrdinaryDiffEq, MethodOfLines, Surrogates, Flux
+using Agents, OrdinaryDiffEq, MethodOfLines, Surrogates, Flux, TrixiParticles, JumpProcesses
 
 links = InterLinks(
     "CommonSolve" => "https://docs.sciml.ai/CommonSolve/dev/",
@@ -16,15 +16,17 @@ PAGES = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
     "Examples" => [
-        "examples/mtk.md",
         "examples/duplicated_components.md",
-        "examples/out_of_sync.md",
-        "examples/spatial_maps.md",
+        "examples/advanced_duplicated_components.md",
         "examples/surrogates.md",
-        "examples/external_components.md",
+        #"examples/mtk.md",
+        #"examples/out_of_sync.md",
+        #"examples/spatial_maps.md",
+        #"examples/external_components.md",
     ],
     "Mermaid Interface" => "interface.md",
     "Is Mermaid right for me?" => "is_mermaid_right_for_me.md",
+    "FAQ" => "FAQ.md",
     "API" => "API.md"
 ]
 
@@ -33,6 +35,8 @@ modules = [Mermaid,
     Base.get_extension(Mermaid, :DiffEqExt),
     Base.get_extension(Mermaid, :MethodOfLinesExt),
     Base.get_extension(Mermaid, :SurrogatesExt),
+    Base.get_extension(Mermaid, :TrixiParticlesExt),
+    Base.get_extension(Mermaid, :JumpProcessesExt),
 ]
 
 format = Documenter.HTML(assets = ["assets/logo.ico"])

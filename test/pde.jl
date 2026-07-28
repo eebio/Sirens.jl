@@ -99,7 +99,7 @@
 end
 
 @testitem "state control" begin
-    using OrdinaryDiffEq, ModelingToolkit, MethodOfLines, DomainSets
+    using OrdinaryDiffEq, ModelingToolkit, MethodOfLines, DomainSets, DiffEqBase
     @parameters t x
     @variables u(..) g(..) [irreducible = true]
     Dt = Differential(t)
@@ -152,7 +152,7 @@ end
     )
     integrator = init(c1)
 
-    @test issetequal(variables(integrator), ["u", "g", "#time"])
+    @test issetequal(variables(integrator), ["u", "g", "#time", "#integrator", "#state"])
 
     # Check initial state
     @test getstate(integrator, ConnectedVariable("PDE.u")) ==
@@ -204,4 +204,36 @@ end
     )
     int = init(c1)
     @test_throws ArgumentError getstate(int, ConnectedVariable("PDE.u"))
+
+    # Reset to numeric state_names for special variable tests
+    c1 = MOLComponent(prob, Tsit5();
+        name = "PDE",
+        state_names = OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
+            "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
+        timestep = 0.0001
+    )
+    int = init(c1)
+
+    # Test special variable #state
+    @test "#state" in variables(int)
+    state_via_special = getstate(int, ConnectedVariable("PDE.#state"))
+    @test state_via_special isa Vector
+    @test length(state_via_special) == 18
+    original_state = copy(state_via_special)
+    new_state = [-2.0 for _ in 1:18]
+    setstate!(int, ConnectedVariable("PDE.#state"), deepcopy(new_state))
+    @test getstate(int, ConnectedVariable("PDE.#state")) == new_state
+    @test getstate(int) == new_state
+
+    # Test special variable #integrator
+    @test "#integrator" in variables(int)
+    integrator_copy = getstate(int, ConnectedVariable("PDE.#integrator"); copy = true)
+    @test typeof(integrator_copy) <: SciMLBase.DEIntegrator
+    @test integrator_copy.u == new_state
+    # Modify state and step
+    step!(int)
+    @test getstate(int) ≠ new_state
+    # Restore integrator state
+    setstate!(int, ConnectedVariable("PDE.#integrator"), integrator_copy)
+    @test getstate(int) == new_state
 end

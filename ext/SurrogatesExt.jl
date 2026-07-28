@@ -104,7 +104,7 @@ function Mermaid.setstate!(compInt::SurrogateComponentIntegrator,
 end
 
 function Mermaid.variables(component::SurrogateComponent)
-    return variables(component.component)
+    return union(variables(component.component), ["#time"])
 end
 
 end
