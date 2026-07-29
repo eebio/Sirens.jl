@@ -78,7 +78,7 @@ end
     using OrdinaryDiffEqLowOrderRK
     using ModelingToolkit: t_nounits as t, D_nounits as D
 
-    @variables x(t) y(t)
+    @variables x(t) [irreducible=true] y(t) [irreducible=true]
     eqs = [D(x) ~ x - x * y
            D(y) ~ -y + x * y]
     @mtkcompile lv = System(eqs, t)
