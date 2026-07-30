@@ -174,10 +174,10 @@ Return the full name of a [ConnectedVariable](@ref) as a string.
 function Base.fullname(var::AbstractConnectedVariable)
     # Construct the full name of the variable
     comp = var.component
-    dupindex = isnothing(var.duplicatedindex) ? "" : "[" * string(var.duplicatedindex) * "]"
+    dupindex = isnothing(var.duplicatedindex) ? "" : string("[", var.duplicatedindex, "]")
     variable = var.variable
-    index = isnothing(var.variableindex) ? "" : "[" * string(var.variableindex) * "]"
-    return comp * dupindex * "." * variable * index
+    index = isnothing(var.variableindex) ? "" : string("[", var.variableindex, "]")
+    return string(comp, dupindex, ".", variable, index)
 end
 
 """
