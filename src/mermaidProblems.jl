@@ -32,11 +32,32 @@ Defines a Mermaid hybrid simulation problem.
     particularly important for setting `#ids` and `#init_states` in a
     [DuplicatedComponent](@ref).
 """
-@kwdef struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
+struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
     components::C
     connectors::CC
-    tspan::Tuple{Float64, Float64}
-    timescales::Vector{Float64} = ones(length(components))
+    tspan::NTuple{2,Float64}
+    timescales::Vector{Float64}
+
+    function MermaidProblem(components::C, connectors::CC, tspan::NTuple{2,Float64}, timescales::Vector{Float64}) where {C<:Tuple,CC<:Tuple}
+        return new{C,CC}(components, connectors, tspan, timescales)
+    end
+end
+
+function MermaidProblem(; components::Union{Tuple,Vector}, connectors::Union{Tuple,Vector},
+    tspan::Union{Tuple,AbstractVector}, timescales::Union{Tuple, AbstractVector}=ones(length(components)))
+    # Convert vectors to tuples
+    comp_tuple = components isa Tuple ? components : tuple(components...)
+    conn_tuple = connectors isa Tuple ? connectors : tuple(connectors...)
+
+    # Validate tspan length and convert to proper type
+    if length(tspan) != 2
+       throw(ArgumentError("tspan must have exactly 2 elements, got $(length(tspan))"))
+    end
+    tspan_tuple::NTuple{2,Float64} = (Float64(tspan[1]), Float64(tspan[2]))
+
+    timescales = [convert(Float64, ts) for ts in timescales]
+
+    return MermaidProblem(comp_tuple, conn_tuple, tspan_tuple, timescales)
 end
 
 """
@@ -54,7 +75,7 @@ end
 Created using `init(prob::MermaidProblem, alg::AbstractMermaidSolver; save_vars=[])`. All fields are considered internal.
 """
 mutable struct MermaidIntegrator{
-    I <: Tuple, CC <: Tuple, X <: AbstractMermaidSolver, S <: Union{Function, AbstractVector}} <:
+    I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,S<:Union{Function,AbstractVector}} <:
                AbstractMermaidIntegrator
     integrators::I
     connectors::CC
@@ -64,6 +85,10 @@ mutable struct MermaidIntegrator{
     save_vars::Vector{<:AbstractString}
     saveat::S
     timescales::Vector{Float64}
+
+    function MermaidIntegrator(integrators::I, connectors::CC, tspan::Tuple{Float64, Float64}, currtime::Float64, alg::X, save_vars::Vector{<:AbstractString}, saveat::S, timescales::Vector{<:Real}) where {I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,S<:Union{Function,AbstractVector}}
+        return new{I,CC,X,S}(integrators, connectors, tspan, currtime, alg, save_vars, saveat, timescales)
+    end
 end
 
 """
@@ -93,7 +118,7 @@ Defines the integrator for a Mermaid hybrid simulation.
 function CommonSolve.init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolver;
         save_vars = nothing, saveat = nothing)
     # Initialize the solver
-    integrators = [init(c) for c in prob.components]
+    integrators = tuple([something(init(c)) for c in prob.components]...)
 
     # Process save_vars
     if isnothing(save_vars) || save_vars == :all
@@ -118,6 +143,12 @@ function CommonSolve.init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolv
     if saveat isa Number
         saveat = prob.tspan[1]:saveat:prob.tspan[2]
     end
+
+    # Validate tspan length
+    if length(prob.tspan) != 2
+        throw(ArgumentError("tspan must have exactly 2 elements, got $(length(prob.tspan))"))
+    end
+
     return MermaidIntegrator(
         integrators, prob.connectors, prob.tspan, 0.0, alg, save_vars, saveat, prob.timescales)
 end
