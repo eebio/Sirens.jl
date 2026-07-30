@@ -87,7 +87,7 @@ mutable struct DuplicatedComponentIntegrator{T <: AbstractComponentIntegrator, U
 end
 
 function CommonSolve.init(c::DuplicatedComponent)
-    integrator = CommonSolve.init(c.component)
+    integrator = something(init(c.component))
     states = deepcopy(c.init_states)
     ids = isnothing(c.instances) ? Int[] : collect(1:(c.instances))
 
