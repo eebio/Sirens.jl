@@ -89,14 +89,14 @@ Represents a connection between multiple [ConnectedVariables](@ref ConnectedVari
 possibly with a transformation function.
 
 # Fields
-- `inputs::Vector{<:AbstractConnectedVariable}`: Input variables for the connector.
-- `outputs::Vector{<:AbstractConnectedVariable}`: Output variables for the connector.
+- `inputs::Tuple{<:AbstractConnectedVariable}`: Input variables for the connector.
+- `outputs::Tuple{<:AbstractConnectedVariable}`: Output variables for the connector.
 - `func::Union{Nothing,Function}`: Optional function to transform inputs to outputs.
 """
-struct Connector <: AbstractConnector
-    inputs::Vector{ConnectedVariable}
-    outputs::Vector{ConnectedVariable}
-    func::Union{Nothing, Function}
+struct Connector{I<:Tuple,O<:Tuple} <: AbstractConnector
+    inputs::I
+    outputs::O
+    func::Union{Nothing,Function}
 end
 
 """
@@ -147,11 +147,17 @@ are passed to component `getstate`/`setstate!` implementations:
 
 See also [MinimumTimeStepper](@ref).
 """
-function Connector(; inputs::Vector{T}, outputs::Vector{S},
-        func = nothing) where {T <: AbstractString} where {S <: AbstractString}
-    inputs = [ConnectedVariable(i) for i in inputs]
-    outputs = [ConnectedVariable(o) for o in outputs]
-    return Connector(inputs, outputs, func)
+function Connector(; inputs::Union{Tuple,Vector}, outputs::Union{Tuple,Vector},
+    func=nothing)
+    # Convert to ConnectedVariable tuples for type stability
+    function to_cv_tuple(vars)
+        tuple((v isa ConnectedVariable ? v : ConnectedVariable(v) for v in vars)...)
+    end
+
+    inputs_tuple = to_cv_tuple(inputs)
+    outputs_tuple = to_cv_tuple(outputs)
+
+    return Connector(inputs_tuple, outputs_tuple, func)
 end
 
 """
