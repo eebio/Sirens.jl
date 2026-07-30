@@ -3,20 +3,20 @@ using CommonSolve
 """
     MermaidProblem <: AbstractMermaidProblem
     MermaidProblem(;
-        components::Vector{AbstractComponent},
-        connectors::Vector{AbstractConnector},
+        components::Union{Tuple, Vector},
+        connectors::Union{Tuple, Vector},
         tspan::Tuple{Float64, Float64},
         timescales::Vector{Float64}=ones(length(components)))
 
 Defines a Mermaid hybrid simulation problem.
 
 # Keyword Arguments
-- `components::Vector{<:AbstractComponent}`: Vector of [Components](@ref AbstractComponent). Order is significant
+- `components::Union{Tuple, Vector}`: Tuple or Vector of [Components](@ref AbstractComponent). Order is significant
     because it determines stepping order when multiple components can be stepped together.
-    Component names must be unique.
-- `connectors::Vector{<:AbstractConnector}`: Vector of [Connectors](@ref Connector). Order
+    Component names must be unique. Using a tuple preserves type information for each element.
+- `connectors::Union{Tuple, Vector}`: Tuple or Vector of [Connectors](@ref Connector). Order
     is significant; connectors are applied in order, and later connectors can observe
-    changes made by earlier ones.
+    changes made by earlier ones. Using a tuple preserves type information for each element.
 - `tspan::Tuple{Float64, Float64}`: The time span of the simulation, from start to end time.
 - `timescales::Vector{Float64}=ones(length(components))`: Timescales for each component.
     For component `i`, global time is computed as `t_global[i] = timescales[i] * t_local[i]`.
@@ -32,9 +32,9 @@ Defines a Mermaid hybrid simulation problem.
     particularly important for setting `#ids` and `#init_states` in a
     [DuplicatedComponent](@ref).
 """
-@kwdef struct MermaidProblem <: AbstractMermaidProblem
-    components::Vector{AbstractComponent}
-    connectors::Vector{AbstractConnector}
+@kwdef struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
+    components::C
+    connectors::CC
     tspan::Tuple{Float64, Float64}
     timescales::Vector{Float64} = ones(length(components))
 end
@@ -42,8 +42,8 @@ end
 """
     MermaidIntegrator <: AbstractMermaidIntegrator
     MermaidIntegrator(;
-        integrators::Vector{<:AbstractComponentIntegrator},
-        connectors::Vector{<:AbstractConnector},
+        integrators::Tuple,
+        connectors::Tuple,
         tspan::Tuple{Float64, Float64},
         currtime::Float64,
         alg::AbstractMermaidSolver,
@@ -54,10 +54,10 @@ end
 Created using `init(prob::MermaidProblem, alg::AbstractMermaidSolver; save_vars=[])`. All fields are considered internal.
 """
 mutable struct MermaidIntegrator{
-    X <: AbstractMermaidSolver, S <: Union{Function, AbstractVector}} <:
+    I <: Tuple, CC <: Tuple, X <: AbstractMermaidSolver, S <: Union{Function, AbstractVector}} <:
                AbstractMermaidIntegrator
-    integrators::Vector{<:AbstractComponentIntegrator}
-    connectors::Vector{<:AbstractConnector}
+    integrators::I
+    connectors::CC
     tspan::Tuple{Float64, Float64}
     currtime::Float64
     alg::X
