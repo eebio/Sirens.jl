@@ -64,7 +64,6 @@ AgentsComponent
 We can see that, again, we need to define the model (this time a `StandardABM` from `Agents.jl`), a `name` and a `state_names`.
 
 ```@example tutorial
-
 using Agents, Random, LinearAlgebra
 @agent struct Bird(ContinuousAgent{2, Float64})
     const speed::Float64
@@ -170,10 +169,7 @@ MermaidSolution
 
 ```@example tutorial
 using Plots
-
 plot(sol["food.x"], sol["food.y"], color=:green, label="Food trajectory")
-
-nothing # hide
 ```
 
 ## Advanced Visualisations
