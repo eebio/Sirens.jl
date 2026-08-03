@@ -32,11 +32,28 @@ Defines a Mermaid hybrid simulation problem.
     particularly important for setting `#ids` and `#init_states` in a
     [DuplicatedComponent](@ref).
 """
-@kwdef struct MermaidProblem <: AbstractMermaidProblem
+struct MermaidProblem <: AbstractMermaidProblem
     components::Vector{AbstractComponent}
     connectors::Vector{AbstractConnector}
     tspan::Tuple{Float64, Float64}
-    timescales::Vector{Float64} = ones(length(components))
+    timescales::Vector{Float64}
+
+    function MermaidProblem(components::Vector{AbstractComponent}, connectors::Vector{AbstractConnector}, tspan::Tuple{Float64, Float64}, timescales::Vector{Float64}=ones(length(components)))
+        # Check that component names are unique
+        names = [comp.name for comp in components]
+        if length(names) != length(unique(names))
+            error("Component names must be unique. Found duplicate names: $(names)")
+        end
+
+        # Check for algebraic loops in the connections
+        report_algebraic_loop(connectors)
+
+        new(components, connectors, tspan, timescales)
+    end
+end
+
+function MermaidProblem(; components, connectors, tspan, timescales=ones(length(components)))
+    return MermaidProblem(components, connectors, tspan, timescales)
 end
 
 """
