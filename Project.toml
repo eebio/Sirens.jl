@@ -1,11 +1,15 @@
 name = "Mermaid"
 uuid = "922b6a97-db6b-4881-a67b-b45fb8a31c4c"
-authors = ["Matt J. Owen <matt.owen@bristol.ac.uk>"]
 version = "0.1.0"
+authors = ["Matt J. Owen <matt.owen@bristol.ac.uk>"]
+
+[workspace]
+projects = ["test", "docs"]
 
 [deps]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 
 [weakdeps]
@@ -31,12 +35,10 @@ CommonSolve = "0.2.4"
 DiffEqBase = "6.190.2, 7"
 DocStringExtensions = "0.9.5"
 Flux = "0.16.5"
+Graphs = "1.14.0"
 JumpProcesses = "9.23.1"
 MethodOfLines = "0.11.8"
 OrderedCollections = "1.8.1, 2.0"
 Surrogates = "7.0.1"
 TrixiParticles = "0.4.3, 0.5"
 julia = "1.10"
-
-[workspace]
-projects = ["test", "docs"]
