@@ -263,3 +263,22 @@ function checkconnection(conn::AbstractConnector, merInt::AbstractMermaidIntegra
     end
     return max_input_time <= min_output_time
 end
+
+struct ImplicitConnector <: AbstractConnector
+    inputs::Vector{ConnectedVariable}
+    outputs::Vector{ConnectedVariable}
+end
+
+function ImplicitConnector(; inputs::Vector{T}, outputs::Vector{S}) where {T<:AbstractString} where {S<:AbstractString}
+    inputs = [ConnectedVariable(i) for i in inputs]
+    outputs = [ConnectedVariable(o) for o in outputs]
+    return ImplicitConnector(inputs, outputs)
+end
+
+function isexecutable(::AbstractConnector)
+    return true
+end
+
+function isexecutable(::ImplicitConnector)
+    return false
+end
