@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Algorithm Accuracy · Mermaid.jl</title><meta name="title" content="Algorithm Accuracy · Mermaid.jl"/><meta property="og:title" content="Algorithm Accuracy · Mermaid.jl"/><meta property="twitter:title" content="Algorithm Accuracy · Mermaid.jl"/><meta name="description" content="Documentation for Mermaid.jl."/><meta property="og:description" content="Documentation for Mermaid.jl."/><meta property="twitter:description" content="Documentation for Mermaid.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/logo.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="Mermaid.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Mermaid.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../duplicated_components/">Duplicated Components</a></li><li><a class="tocitem" href="../advanced_duplicated_components/">Advanced Duplicated Components</a></li><li><a class="tocitem" href="../surrogates/">Surrogates</a></li><li class="is-active"><a class="tocitem" href>Algorithm Accuracy</a></li></ul></li><li><a class="tocitem" href="../../interface/">Mermaid Interface</a></li><li><a class="tocitem" href="../../is_mermaid_right_for_me/">Is Mermaid right for me?</a></li><li><a class="tocitem" href="../../FAQ/">FAQ</a></li><li><a class="tocitem" href="../../API/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Algorithm Accuracy</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Algorithm Accuracy</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/eebio/Mermaid.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/eebio/Mermaid.jl/blob/main/docs/src/examples/algorithm_accuracy.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Algorithm-Accuracy"><a class="docs-heading-anchor" href="#Algorithm-Accuracy">Algorithm Accuracy</a><a id="Algorithm-Accuracy-1"></a><a class="docs-heading-anchor-permalink" href="#Algorithm-Accuracy" title="Permalink"></a></h1><p>The only algorithm available in Mermaid is the <a href="../../API/#Mermaid.MinimumTimeStepper">MinimumTimeStepper</a>. You may be interested to understand how separating a system into multiple components to be solved affects its accuracy.</p><div class="admonition is-info" id="Accuracy-doesn&#39;t-always-make-sense-e8b7aa39336e8aaa"><header class="admonition-header">Accuracy doesn&#39;t always make sense<a class="admonition-anchor" href="#Accuracy-doesn&#39;t-always-make-sense-e8b7aa39336e8aaa" title="Permalink"></a></header><div class="admonition-body"><p>In some situtations, it doesn&#39;t make sense to talk about the accuracy of a Mermaid algorithm. For example, discrete time solvers are typically perfectly accurate (to floating point tolerances) and have lower bounds on the timestep that can be used, both properties that make it impossible to assign an <span>$\mathcal{O}(h^n)$</span> accuracy to a solver. However, it can be useful to understand how these connections may affect the accuracy of continuous time components, such as differential equations.</p></div></div><p>We can assess the accuracy of the Mermaid solver numerically, by comparing a system of differential equations, solved once with very high accuracy, and then solved many times with different syncronisation time steps. As the synchronisation time step descreases, we should expect the accuracy to increase, and we can estimate the order accuracy from these measurements.</p><pre><code class="language-julia hljs">using OrdinaryDiffEq
+using Plots
+
+# Lotka-Volterra equations
+function f!(du, u, p, t)
+    du[1] = p[1] * u[1] - p[2] * u[1] * u[2]
+    du[2] = p[3] * u[1] * u[2] - p[4] * u[2]
+end
+
+u0 = [0.5, 0.5]
+p = [1.5, 4.0, 1.0, 3.0]
+tspan = (0.0, 1.0)
+prob = ODEProblem(f!, u0, tspan, p)
+
+sol = solve(prob, Tsit5(), abstol=1e-10, reltol=1e-6)
+plot(sol, vars=(1, 2), xlabel=&quot;Prey&quot;, ylabel=&quot;Predator&quot;, title=&quot;Lotka-Volterra Phase Plot&quot;)</code></pre><img src="ac93f5e6.svg" alt="Example block output"/><p>By using an adaptive solver with tight tolerances, we can get a very accurate estimate of the true solution which we can compare to one derived through Mermaid connections. We will set up a Mermaid simulation to reproduce the above ODE system and solve it with varying timesteps.</p><pre><code class="language-julia hljs">using Mermaid
+
+function f1!(du, u, p, t)
+    du[1] = p[1] * u[1] - p[2] * u[1] * u[2]
+    du[2] = 0.0
+end
+
+function f2!(du, u, p, t)
+    du[1] = 0.0
+    du[2] = p[3] * u[1] * u[2] - p[4] * u[2]
+end
+
+u0 = [0.5, 0.5]
+p = [1.5, 4.0, 1.0, 3.0]
+tspan = (0.0, 1.0)
+prob1 = ODEProblem(f1!, u0, tspan, p)
+prob2 = ODEProblem(f2!, u0, tspan, p)
+
+error1 = []
+error2 = []
+tsteps = logrange(1e-4, 1e-1, 20)
+for tstep in tsteps
+    comp1 = DEComponent(prob1, Tsit5(); name=&quot;prey_comp&quot;, state_names=Dict(&quot;x&quot; =&gt; 1, &quot;y&quot; =&gt; 2), intkwargs=(abstol=1e-10, reltol=1e-6, maxiters=Inf), timestep=tstep)
+    comp2 = DEComponent(prob2, Tsit5(); name=&quot;predator_comp&quot;, state_names=Dict(&quot;x&quot; =&gt; 1, &quot;y&quot; =&gt; 2), intkwargs=(abstol=1e-10, reltol=1e-6, maxiters=Inf), timestep=tstep)
+
+    conn1 = Connector(inputs = [&quot;prey_comp.x&quot;], outputs = [&quot;predator_comp.x&quot;])
+    conn2 = Connector(inputs = [&quot;predator_comp.y&quot;], outputs = [&quot;prey_comp.y&quot;])
+
+    mp = MermaidProblem(components = [comp1, comp2], connectors = [conn1, conn2], tspan=tspan)
+    alg = MinimumTimeStepper()
+    solMer = solve(mp, alg; saveat = (integrator, t) -&gt; t&gt;0.9, save_vars = [&quot;prey_comp.x&quot;, &quot;predator_comp.y&quot;])
+
+    push!(error1, abs(solMer(1.0)[&quot;prey_comp.x&quot;] - sol.u[end][1]))
+    push!(error2, abs(solMer(1.0)[&quot;predator_comp.y&quot;] - sol.u[end][2]))
+end
+
+plot(tsteps, error1, label=&quot;Prey Error&quot;, xlabel=&quot;Time Step&quot;, ylabel=&quot;Error&quot;, xscale=:log10, yscale=:log10)
+plot!(tsteps, error2, label=&quot;Predator Error&quot;)</code></pre><img src="c9c8fbea.svg" alt="Example block output"/><p>Plotting the global error (error after many timesteps) against the time step used (on a log-log plot) gives a straight line, and the gradient of the line tells us the accuracy order of the solver.</p><pre><code class="language-julia hljs">using Statistics
+
+logerror1 = log10.(error1)
+logerror2 = log10.(error2)
+logtsteps = log10.(tsteps)
+
+grad1 = sum((logerror1 .- mean(logerror1)) .* (logtsteps .- mean(logtsteps))) / sum((logtsteps .- mean(logtsteps)).^2)
+grad2 = sum((logerror2 .- mean(logerror2)) .* (logtsteps .- mean(logtsteps))) / sum((logtsteps .- mean(logtsteps)).^2)
+
+@show grad1, grad2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(1.0010067310376125, 0.9848513427372126)</code></pre><p>The Mermaid solver accuracy is <span>$\mathcal{O}(h)$</span>. In future this may be improved upon, in particular 2nd order methods <span>$(\mathcal{O}(h^2))$</span>should be achievable through the current interface.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../surrogates/">« Surrogates</a><a class="docs-footer-nextpage" href="../../interface/">Mermaid Interface »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Monday 3 August 2026 15:02">Monday 3 August 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
