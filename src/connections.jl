@@ -264,6 +264,20 @@ function checkconnection(conn::AbstractConnector, merInt::AbstractMermaidIntegra
     return max_input_time <= min_output_time
 end
 
+function strip_index(cv::ConnectedVariable)
+    return ConnectedVariable(cv.component, cv.variable, nothing, nothing)
+end
+
+function strip_index(conn::AbstractConnector)
+    inputs = [strip_index(i) for i in conn.inputs]
+    outputs = [strip_index(o) for o in conn.outputs]
+    if conn isa ImplicitConnector
+        return ImplicitConnector(inputs, outputs)
+    else
+        return Connector(inputs, outputs, conn.func)
+    end
+end
+
 struct ImplicitConnector <: AbstractConnector
     inputs::Vector{ConnectedVariable}
     outputs::Vector{ConnectedVariable}

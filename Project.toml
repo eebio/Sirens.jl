@@ -10,6 +10,7 @@ projects = ["test", "docs"]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+MetaGraphsNext = "fa8bd995-216d-47f1-8a91-f3b68fbeb377"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 
 [weakdeps]
@@ -37,6 +38,7 @@ DocStringExtensions = "0.9.5"
 Flux = "0.16.5"
 Graphs = "1.14.0"
 JumpProcesses = "9.23.1"
+MetaGraphsNext = "0.8.0"
 MethodOfLines = "0.11.8"
 OrderedCollections = "1.8.1, 2.0"
 Surrogates = "7.0.1"
