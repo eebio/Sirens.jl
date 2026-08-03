@@ -19,6 +19,7 @@ PAGES = [
         "examples/duplicated_components.md",
         "examples/advanced_duplicated_components.md",
         "examples/surrogates.md",
+        "examples/algorithm_accuracy.md",
         #"examples/mtk.md",
         #"examples/out_of_sync.md",
         #"examples/spatial_maps.md",
