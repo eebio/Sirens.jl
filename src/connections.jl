@@ -6,12 +6,12 @@ Points to a variable within a component.
 # Fields
 - `component::String`: Name of the component.
 - `variable::String`: Name of the variable.
-- `variableindex::Union{Nothing,Vector{Int},Int}`: Index or range for the variable,
+- `variableindex::Union{Nothing,Vector{Int}}`: Index or range for the variable,
     if applicable.
-- `duplicatedindex::Union{Nothing,Vector{Int},Int}`: Index for duplicated
+- `duplicatedindex::Union{Nothing,Vector{Int}}`: Index for duplicated
     components, if applicable.
 """
-struct ConnectedVariable{U <: AbstractString, V <: AbstractString, X <: Union{Nothing, AbstractVector{Int}, Int}, Y <: Union{Nothing, AbstractVector{Int}, Int}} <: AbstractConnectedVariable
+struct ConnectedVariable{U<:AbstractString,V<:AbstractString,X<:Union{Nothing,Vector{Int}},Y<:Union{Nothing,Vector{Int}}} <: AbstractConnectedVariable
     component::U
     variable::V
     variableindex::X
@@ -59,27 +59,48 @@ function ConnectedVariable(name::AbstractString)
     # Parse the variable name to extract its parts
     component, variable = split(name, ".")
     # Is there a variable index
-    if contains(variable, "[")
-        variable, index = split(variable, "[")
-        # Strip the final "]"
-        index = strip(index, ']')
-        # This will parse "1:5" to a UnitRange{Int} or "3" to an Int
-        index = eval(Meta.parse(index))
+    index::Union{Nothing,Vector{Int}} = if contains(variable, "[")
+        variable, idx_str = split(variable, "[")
+        _parse_index(strip(idx_str, ']'))
     else
-        # No index
-        index = nothing
+        nothing
     end
     # Is there a duplicated index
-    if contains(component, "[")
-        component, dupindex = split(component, "[")
-        # Strip the final "]"
-        dupindex = strip(dupindex, ']')
-        # This will parse "1:5" to a UnitRange{Int} or "3" to an Int
-        dupindex = eval(Meta.parse(dupindex))
+    dupindex::Union{Nothing,Vector{Int}} = if contains(component, "[")
+        component, dup_str = split(component, "[")
+        _parse_index(strip(dup_str, ']'))
     else
-        dupindex = nothing
+        nothing
     end
     return ConnectedVariable(component, variable, index, dupindex)
+end
+
+"""
+    _parse_index(s::AbstractString)::Vector{Int}
+
+Parse an index string into a vector of integers.
+
+# Parsing Rules
+- Single integer: "1" → [1]
+- Range: "1:5" → [1, 2, 3, 4, 5]
+- Vector with brackets: "[1, 3]" → [1, 3]
+"""
+function _parse_index(s::AbstractString)::Vector{Int}
+    s = strip(s)
+    # Handle vector notation: "[1, 3]"
+    if startswith(s, '[') && endswith(s, ']')
+        inner = s[2:(end-1)]
+        return parse.(Int, split(inner, ','))
+    end
+    # Handle range notation: "1:5"
+    if contains(s, ':')
+        parts = split(s, ':')
+        start = parse(Int, parts[1])
+        stop = parse(Int, parts[2])
+        return collect(start:stop)
+    end
+    # Handle single integer: "1"
+    return [parse(Int, s)]
 end
 
 """
@@ -93,7 +114,7 @@ possibly with a transformation function.
 - `outputs::Tuple{<:AbstractConnectedVariable}`: Output variables for the connector.
 - `func::Union{Nothing,Function}`: Optional function to transform inputs to outputs.
 """
-struct Connector{I<:Tuple,O<:Tuple} <: AbstractConnector
+struct Connector{I,O} <: AbstractConnector
     inputs::I
     outputs::O
     func::Union{Nothing,Function}
@@ -149,15 +170,13 @@ See also [MinimumTimeStepper](@ref).
 """
 function Connector(; inputs::Union{Tuple,Vector}, outputs::Union{Tuple,Vector},
     func=nothing)
-    # Convert to ConnectedVariable tuples for type stability
-    function to_cv_tuple(vars)
-        tuple((v isa ConnectedVariable ? v : ConnectedVariable(v) for v in vars)...)
-    end
+    inputs_cv = _ensure_connected_variables(inputs)
+    outputs_cv = _ensure_connected_variables(outputs)
+    return Connector(inputs_cv, outputs_cv, func)
+end
 
-    inputs_tuple = to_cv_tuple(inputs)
-    outputs_tuple = to_cv_tuple(outputs)
-
-    return Connector(inputs_tuple, outputs_tuple, func)
+@inline function _ensure_connected_variables(vars)
+    return ConnectedVariable[v isa ConnectedVariable ? v : ConnectedVariable(v) for v in vars]
 end
 
 """

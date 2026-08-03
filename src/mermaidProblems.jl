@@ -118,7 +118,7 @@ Defines the integrator for a Mermaid hybrid simulation.
 function CommonSolve.init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolver;
         save_vars = nothing, saveat = nothing)
     # Initialize the solver
-    integrators = tuple([something(init(c)) for c in prob.components]...)
+    integrators = Tuple(something(init(c)) for c in prob.components)
 
     # Process save_vars
     if isnothing(save_vars) || save_vars == :all

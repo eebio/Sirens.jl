@@ -55,9 +55,13 @@ function Mermaid.DEComponent(model::DiffEqBase.AbstractDEProblem; kwargs...)
 end
 
 function CommonSolve.init(c::Mermaid.DEComponent)
-    integrator = Mermaid.DEComponentIntegrator(
-        init(c.model, c.alg; c.intkwargs...), c)
-    return integrator
+    if isnothing(c.alg)
+        return Mermaid.DEComponentIntegrator(
+            init(c.model; c.intkwargs...), c)
+    else
+        return Mermaid.DEComponentIntegrator(
+            init(c.model, c.alg; c.intkwargs...), c)
+    end
 end
 
 function CommonSolve.step!(compInt::Mermaid.DEComponentIntegrator)
