@@ -78,7 +78,7 @@ Even if a surrogate model is performant, you should also verify its accuracy.
 In this section, we will compare plots of both the original ODE component and the surrogate component for two variables. We also see how the true solution oscillates every 1000ms.
 
 ```@example surrogates
-sol = solve(prob; tspan = longtime, maxiters = Inf, saveat = 50, save_idxs = [V, Ki])
+sol = solve(prob; tspan = longtime, maxiters = Inf, saveat = 50, save_idxs = [V, Ki], tstops = 10:1000:longtime)
 
 sol1 = solve!(ori_int)
 sol2 = solve!(surr_int)
@@ -89,6 +89,7 @@ p2 = plot(sol.t, sol[Ki], label = "True", linewidth = 1)
 plot!(p1, sol1.t, sol1["cell.v"], label = "Original", linewidth = 3)
 plot!(p1, sol2.t, sol2["cell.v"], label = "Surrogate", linestyle = :dash, linewidth = 3)
 xlabel!(p1, "Time (ms)")
+xticks!(p1, 0:5e4:longtime)
 plot!(p2, sol1.t, sol1["cell.ki"], label = "Original", linewidth = 3)
 plot!(p2, sol2.t, sol2["cell.ki"], label = "Surrogate", linestyle = :dash, linewidth = 3)
 xlabel!(p2, "Time (ms)")
@@ -96,5 +97,6 @@ ylims!(p1, -88.005, -87.92)
 ylims!(p2, 144.475, 144.675)
 ylabel!(p1, "Membrane Potential (mV)")
 ylabel!(p2, "K+ Concentration (mM)")
+xticks!(p2, 0:5e4:longtime)
 plot(p1, p2, layout = (1, 2))
 ```
