@@ -11,7 +11,7 @@ Points to a variable within a component.
 - `duplicatedindex::Union{Nothing,Vector{Int}}`: Index for duplicated
     components, if applicable.
 """
-struct ConnectedVariable{U<:AbstractString,V<:AbstractString,X<:Union{Nothing,Vector{Int}},Y<:Union{Nothing,Vector{Int}}} <: AbstractConnectedVariable
+struct ConnectedVariable{U<:AbstractString,V<:AbstractString,X<:Union{Nothing,Vector{Int},Int},Y<:Union{Nothing,Vector{Int},Int}} <: AbstractConnectedVariable
     component::U
     variable::V
     variableindex::X
@@ -59,14 +59,14 @@ function ConnectedVariable(name::AbstractString)
     # Parse the variable name to extract its parts
     component, variable = split(name, ".")
     # Is there a variable index
-    index::Union{Nothing,Vector{Int}} = if contains(variable, "[")
+    index::Union{Nothing,Vector{Int},Int} = if contains(variable, "[")
         variable, idx_str = split(variable, "[")
         _parse_index(strip(idx_str, ']'))
     else
         nothing
     end
     # Is there a duplicated index
-    dupindex::Union{Nothing,Vector{Int}} = if contains(component, "[")
+    dupindex::Union{Nothing,Vector{Int},Int} = if contains(component, "[")
         component, dup_str = split(component, "[")
         _parse_index(strip(dup_str, ']'))
     else
@@ -81,11 +81,11 @@ end
 Parse an index string into a vector of integers.
 
 # Parsing Rules
-- Single integer: "1" → [1]
+- Single integer: "1" → 1
 - Range: "1:5" → [1, 2, 3, 4, 5]
 - Vector with brackets: "[1, 3]" → [1, 3]
 """
-function _parse_index(s::AbstractString)::Vector{Int}
+function _parse_index(s::AbstractString)::Union{Vector{Int}, Int}
     s = strip(s)
     # Handle vector notation: "[1, 3]"
     if startswith(s, '[') && endswith(s, ']')
@@ -100,7 +100,7 @@ function _parse_index(s::AbstractString)::Vector{Int}
         return collect(start:stop)
     end
     # Handle single integer: "1"
-    return [parse(Int, s)]
+    return parse(Int, s)
 end
 
 """

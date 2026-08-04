@@ -1,7 +1,7 @@
 @testitem "fullname" begin
-    @test fullname(ConnectedVariable("comp", "var", 1:5, [1, 3, 5, 7])) ==
-          "comp[[1, 3, 5, 7]].var[1:5]"
-    @test fullname(ConnectedVariable("cmp", "var", 1:5, nothing)) == "cmp.var[1:5]"
+    @test fullname(ConnectedVariable("comp", "var", [1:5...], [1, 3, 5, 7])) ==
+          "comp[[1, 3, 5, 7]].var[[1, 2, 3, 4, 5]]"
+    @test fullname(ConnectedVariable("cmp", "var", [1:5...], nothing)) == "cmp.var[[1, 2, 3, 4, 5]]"
     @test fullname(ConnectedVariable("cp", "vr", nothing, [1, 3, 5, 7])) ==
           "cp[[1, 3, 5, 7]].vr"
     @test fullname(ConnectedVariable("comp", "var", nothing, nothing)) == "comp.var"
