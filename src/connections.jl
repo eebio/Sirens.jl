@@ -283,6 +283,18 @@ struct ImplicitConnector <: AbstractConnector
     outputs::Vector{ConnectedVariable}
 end
 
+"""
+    ImplicitConnector(; inputs::Vector{T}, outputs::Vector{S}) where {T<:AbstractString} where {S<:AbstractString}
+
+Construct an [ImplicitConnector](@ref) from string names for inputs and outputs.
+
+Implicit connectors are only used for algebraic loop detection and are not executed during
+    the simulation.
+
+# Arguments
+- `inputs::Vector{<:AbstractString}`: Names of input variables.
+- `outputs::Vector{<:AbstractString}`: Names of output variables.
+"""
 function ImplicitConnector(; inputs::Vector{T}, outputs::Vector{S}) where {T<:AbstractString} where {S<:AbstractString}
     inputs = [ConnectedVariable(i) for i in inputs]
     outputs = [ConnectedVariable(o) for o in outputs]
