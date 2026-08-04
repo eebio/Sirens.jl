@@ -60,10 +60,10 @@ function MermaidProblem(; components, connectors, tspan, timescales=ones(length(
         connectors = AbstractConnector[]
     end
     if ! (timescales isa Vector{Float64})
-        timescales = convert(Vector{Float64}, timescales)
+        timescales = Float64[timescales...]
     end
     if ! (tspan isa Tuple{Float64, Float64})
-        tspan = convert(Tuple{Float64, Float64}, tspan)
+        tspan = Tuple{Float64, Float64}(tspan)
     end
     return MermaidProblem(components, connectors, tspan, timescales)
 end

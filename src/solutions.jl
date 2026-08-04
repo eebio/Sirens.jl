@@ -184,13 +184,17 @@ function (sol::AbstractMermaidSolution)(t::Real)
     end
     lb = findlast(x -> x <= t, sol.t)
     ub = findfirst(x -> x >= t, sol.t)
-    if lb == ub
+    if lb == ub && !isnothing(lb)
         return sol[lb]
     end
     change = (t - sol.t[lb]) / (sol.t[ub] - sol.t[lb])
     states = Dict()
     for var in keys(sol.u)
-        states[var] = interpolate_state(sol.u[var][lb], sol.u[var][ub], change)
+        if length(sol.t) == 1
+            states[var] = sol.u[var][1]
+        else
+            states[var] = interpolate_state(sol.u[var][lb], sol.u[var][ub], change)
+        end
     end
     return MermaidSolution([t], states)
 end
