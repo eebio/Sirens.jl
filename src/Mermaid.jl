@@ -5,6 +5,8 @@ module Mermaid
 import CommonSolve: solve!, solve, init, step!
 using OrderedCollections: OrderedDict
 export OrderedDict
+using Graphs: simplecycles, is_cyclic, DiGraph
+using MetaGraphsNext: MetaGraph, add_vertex!, add_edge!
 
 # Exports
 export AbstractComponent, AbstractTimeDependentComponent, AbstractTimeIndependentComponent
@@ -16,6 +18,7 @@ export DEComponentIntegrator, DuplicatedComponentIntegrator, MOLComponentIntegra
        JumpComponentIntegrator, TrixiParticlesComponentIntegrator
 export TimeIndependentComponent
 export Connector, ConnectedVariable, MermaidProblem, MermaidIntegrator
+export ImplicitConnector
 export AbstractMermaidSolver, MinimumTimeStepper
 export MermaidSolution
 export solve!, solve, init, step!
@@ -32,6 +35,7 @@ include("solvers.jl")
 include("Duplicated.jl")
 include("extensions.jl")
 include("TimeIndependent.jl")
+include("loops.jl")
 
 # Documentation
 """

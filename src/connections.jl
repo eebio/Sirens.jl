@@ -288,3 +288,48 @@ function checkconnection(conn::AbstractConnector, merInt::AbstractMermaidIntegra
     end
     return max_input_time <= min_output_time
 end
+
+function strip_index(cv::ConnectedVariable)
+    return ConnectedVariable(cv.component, cv.variable, nothing, nothing)
+end
+
+function strip_index(conn::AbstractConnector)
+    inputs = [strip_index(i) for i in conn.inputs]
+    outputs = [strip_index(o) for o in conn.outputs]
+    if conn isa ImplicitConnector
+        return ImplicitConnector(inputs, outputs)
+    else
+        return Connector(inputs, outputs, conn.func)
+    end
+end
+
+struct ImplicitConnector <: AbstractConnector
+    inputs::Vector{ConnectedVariable}
+    outputs::Vector{ConnectedVariable}
+end
+
+"""
+    ImplicitConnector(; inputs::Vector{T}, outputs::Vector{S}) where {T<:AbstractString} where {S<:AbstractString}
+
+Construct an [ImplicitConnector](@ref) from string names for inputs and outputs.
+
+Implicit connectors are only used for algebraic loop detection and are not executed during
+    the simulation.
+
+# Arguments
+- `inputs::Vector{<:AbstractString}`: Names of input variables.
+- `outputs::Vector{<:AbstractString}`: Names of output variables.
+"""
+function ImplicitConnector(; inputs::Vector{T}, outputs::Vector{S}) where {T<:AbstractString} where {S<:AbstractString}
+    inputs = [ConnectedVariable(i) for i in inputs]
+    outputs = [ConnectedVariable(o) for o in outputs]
+    return ImplicitConnector(inputs, outputs)
+end
+
+function isexecutable(::AbstractConnector)
+    return true
+end
+
+function isexecutable(::ImplicitConnector)
+    return false
+end

@@ -39,6 +39,15 @@ struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
     timescales::Vector{Float64}
 
     function MermaidProblem(components::C, connectors::CC, tspan::NTuple{2,Float64}, timescales::Vector{Float64}) where {C<:Tuple,CC<:Tuple}
+        # Check that component names are unique
+        names = [name(comp) for comp in components]
+        if length(names) != length(unique(names))
+            error("Component names must be unique. Found duplicate names: $(names)")
+        end
+
+        # Check for algebraic loops in the connections
+        report_algebraic_loop(connectors)
+
         return new{C,CC}(components, connectors, tspan, timescales)
     end
 end
