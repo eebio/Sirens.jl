@@ -184,7 +184,7 @@ function (sol::AbstractMermaidSolution)(t::Real)
     end
     lb = findlast(x -> x <= t, sol.t)
     ub = findfirst(x -> x >= t, sol.t)
-    if lb == ub
+    if lb == ub && !isnothing(lb)
         return sol[lb]
     end
     change = (t - sol.t[lb]) / (sol.t[ub] - sol.t[lb])

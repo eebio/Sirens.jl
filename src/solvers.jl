@@ -46,7 +46,7 @@ function CommonSolve.step!(merInt::MermaidIntegrator, ::MinimumTimeStepper)
     merInt.currtime = min_t
     # Apply connections
     for conn in merInt.connectors
-        if checkconnection(conn, merInt)
+        if isexecutable(conn) && checkconnection(conn, merInt)
             runconnection!(merInt, conn)
         end
     end

@@ -71,6 +71,7 @@ fullname
 
 ```@docs
 Connector
+ImplicitConnector
 runconnection
 runconnection!
 ```

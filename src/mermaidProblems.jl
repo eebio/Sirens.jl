@@ -32,11 +32,40 @@ Defines a Mermaid hybrid simulation problem.
     particularly important for setting `#ids` and `#init_states` in a
     [DuplicatedComponent](@ref).
 """
-@kwdef struct MermaidProblem <: AbstractMermaidProblem
+struct MermaidProblem <: AbstractMermaidProblem
     components::Vector{AbstractComponent}
     connectors::Vector{AbstractConnector}
     tspan::Tuple{Float64, Float64}
-    timescales::Vector{Float64} = ones(length(components))
+    timescales::Vector{Float64}
+
+    function MermaidProblem(components::Vector{T}, connectors::Vector{S}, tspan::Tuple{Float64, Float64}, timescales::Vector{Float64}=ones(length(components))) where {T<:AbstractComponent, S<:AbstractConnector}
+        # Check that component names are unique
+        names = [name(comp) for comp in components]
+        if length(names) != length(unique(names))
+            error("Component names must be unique. Found duplicate names: $(names)")
+        end
+
+        # Check for algebraic loops in the connections
+        report_algebraic_loop(connectors)
+
+        new(components, connectors, tspan, timescales)
+    end
+end
+
+function MermaidProblem(; components, connectors, tspan, timescales=ones(length(components)))
+    if isempty(components)
+        components = AbstractComponent[]
+    end
+    if isempty(connectors)
+        connectors = AbstractConnector[]
+    end
+    if ! (timescales isa Vector{Float64})
+        timescales = Float64[timescales...]
+    end
+    if ! (tspan isa Tuple{Float64, Float64})
+        tspan = Tuple{Float64, Float64}(tspan)
+    end
+    return MermaidProblem(components, connectors, tspan, timescales)
 end
 
 """

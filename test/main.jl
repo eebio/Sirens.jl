@@ -152,6 +152,14 @@ end
     list_prop_at_4 = sol["Schelling.list_property"][3]
     # For numeric types, should interpolate: at t=3 (halfway), should be (value@2 + value@4) / 2
     @test list_prop_at_3 ≈ (list_prop_at_2 .+ list_prop_at_4) ./ 2
+
+    # Test single saved point
+    sol = solve(mp, alg; saveat = [5.0])
+    @test length(sol.t) == 1
+    @test sol.t[1] == 5.0
+    @test sol(5.0)["Schelling.min_to_be_happy"] == sol["Schelling.min_to_be_happy"][1]
+    @test_throws BoundsError sol(4.0)
+    @test_throws BoundsError sol(6.0)
 end
 
 @testitem "mermaid integrator" begin
@@ -437,4 +445,75 @@ end
     @test all(a .≈ b)
     @test sol1.t[1:min(length(sol1.t), length(sol2.t))] ≈
           sol2.t[1:min(length(sol1.t), length(sol2.t))]
+end
+
+@testitem "mermaid problem constructor" begin
+    using OrdinaryDiffEq
+    using OrdinaryDiffEqLowOrderRK
+
+    function f1!(du, u, p, t)
+        x, y = u
+        du[1] = x - x * y
+        du[2] = 0
+    end
+    function f2!(du, u, p, t)
+        y, x = u
+        du[1] = -y + x * y
+        du[2] = 0
+    end
+    u0 = [4.0, 2.0]
+    tspan = (0.0, 1.0)
+    prob1 = ODEProblem(f1!, [u0[1], 2.0], tspan)
+    prob2 = ODEProblem(f2!, [u0[2], 4.0], tspan)
+    c1 = DEComponent(
+        prob1, Euler();
+        name = "Prey",
+        timestep = 0.002,
+        state_names = OrderedDict("prey" => 1, "predator" => 2),
+        intkwargs = (:adaptive => false, :dt => 0.002)
+    )
+
+    c2 = DEComponent(
+        prob2, Euler();
+        name = "Predator",
+        timestep = 0.002,
+        state_names = OrderedDict("predator" => 1, "prey" => 2),
+        intkwargs = (:adaptive => false, :dt => 0.002)
+    )
+
+    conn1 = Connector(
+        inputs = ["Predator.predator"],
+        outputs = ["Prey.predator"]
+    )
+    conn2 = Connector(
+        inputs = ["Prey.prey"],
+        outputs = ["Predator.prey"]
+    )
+
+    # Tspan as a vector
+    mp = MermaidProblem(
+        components = [c1, c2], connectors = [conn1, conn2], tspan = [0.0, 1.0])
+
+    # empty connectors
+    mp = MermaidProblem(
+        components = [c1, c2], connectors = [], tspan = (0.0, 1.0))
+
+    # empty components
+    mp = MermaidProblem(
+        components = [], connectors = [conn1, conn2], tspan = (0.0, 1.0))
+
+    # duplicate component names
+    c3 = DEComponent(
+        prob2, Euler();
+        name = "Predator",
+        timestep = 0.002,
+        state_names = OrderedDict("predator" => 1, "prey" => 2),
+        intkwargs = (:adaptive => false, :dt => 0.002)
+    )
+    @test_throws ErrorException MermaidProblem(
+        components = [c1, c2, c3], connectors = [conn1, conn2], tspan = (0.0, 1.0))
+
+    # tuple timescales
+    mp = MermaidProblem(
+        components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 1.0), timescales = (1.0, 2.0))
 end
