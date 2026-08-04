@@ -157,7 +157,7 @@ end
     sol = solve(mp, alg; saveat = [5.0])
     @test length(sol.t) == 1
     @test sol.t[1] == 5.0
-    sol(5.0)
+    @test sol(5.0)["Schelling.min_to_be_happy"] == sol["Schelling.min_to_be_happy"][1]
     @test_throws BoundsError sol(4.0)
     @test_throws BoundsError sol(6.0)
 end

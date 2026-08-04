@@ -190,11 +190,7 @@ function (sol::AbstractMermaidSolution)(t::Real)
     change = (t - sol.t[lb]) / (sol.t[ub] - sol.t[lb])
     states = Dict()
     for var in keys(sol.u)
-        if length(sol.t) == 1
-            states[var] = sol.u[var][1]
-        else
-            states[var] = interpolate_state(sol.u[var][lb], sol.u[var][ub], change)
-        end
+        states[var] = interpolate_state(sol.u[var][lb], sol.u[var][ub], change)
     end
     return MermaidSolution([t], states)
 end
