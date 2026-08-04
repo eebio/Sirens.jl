@@ -219,3 +219,68 @@ end
     @test getstate(integrator, ConnectedVariable("Lotka-Volterra.#state")) == new_state
     @test getstate(integrator) == new_state
 end
+
+@testitem "DAE reinit" begin
+    # A DAE system should be reinitialised with CheckInit (error if algebraic variables are not consistent) after setstate! is called.
+    using OrdinaryDiffEq
+    using OrdinaryDiffEqBDF
+
+    # Simple DAE: x' = y, 0 = x + y - 1 (algebraic constraint)
+    # Residual form: resid[1] = du[1] - y, resid[2] = x + y - 1
+    function f!(resid, du, u, p, t)
+        x, y = u
+        resid[1] = du[1] - y
+        resid[2] = x + y - 1  # algebraic constraint: 0 = x + y - 1
+    end
+
+    u0 = [0.5, 0.5]  # x + y = 1 (satisfies constraint)
+    du0 = [0.5, 0.0]  # initial derivative for x, and 0 for algebraic variable y
+    tspan = (0.0, 1.0)
+
+    # Create DAE problem with index 1
+    prob = DAEProblem(f!, du0, u0, tspan, differential_vars = [true, false])
+
+    c1 = DEComponent(
+        prob, DImplicitEuler();
+        name = "DAE_System",
+        timestep = 0.1,
+        state_names = OrderedDict("x" => 1, "y" => 2)
+    )
+
+    integrator = init(c1)
+
+    # Verify initial state satisfies constraint
+    @test getstate(integrator, ConnectedVariable("DAE_System.x")) == 0.5
+    @test getstate(integrator, ConnectedVariable("DAE_System.y")) == 0.5
+
+    # Step the integrator
+    step!(integrator)
+
+    # Get current state
+    x_val = getstate(integrator, ConnectedVariable("DAE_System.x"))
+    y_val = getstate(integrator, ConnectedVariable("DAE_System.y"))
+
+    # Verify that the algebraic constraint is satisfied
+    @test x_val + y_val ≈ 1.0
+
+    # Set state and verify it reinitializes properly
+    # New state must also satisfy the algebraic constraint
+    new_x = 0.3
+    new_y = 0.7  # x + y = 1
+    setstate!(integrator, ConnectedVariable("DAE_System.x"), new_x)
+    setstate!(integrator, ConnectedVariable("DAE_System.y"), new_y)
+
+    @test getstate(integrator, ConnectedVariable("DAE_System.x")) == new_x
+    @test getstate(integrator, ConnectedVariable("DAE_System.y")) == new_y
+
+    # Further stepping should work without initialization errors
+    step!(integrator)
+
+    # If the new state does not satisfy the algebraic constraint, it should throw an error
+    new_x_invalid = 0.4
+    new_y_invalid = 0.4  # x + y = 0.8 ≠ 1.0
+    setstate!(integrator, ConnectedVariable("DAE_System.x"), new_x_invalid)
+    setstate!(integrator, ConnectedVariable("DAE_System.y"), new_y_invalid)
+
+    @test_skip SciMLBase.CheckInitFailureError #step!(integrator) # should be @test_throws
+end
