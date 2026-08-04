@@ -38,9 +38,9 @@ struct MermaidProblem <: AbstractMermaidProblem
     tspan::Tuple{Float64, Float64}
     timescales::Vector{Float64}
 
-    function MermaidProblem(components::Vector{AbstractComponent}, connectors::Vector{AbstractConnector}, tspan::Tuple{Float64, Float64}, timescales::Vector{Float64}=ones(length(components)))
+    function MermaidProblem(components::Vector{T}, connectors::Vector{S}, tspan::Tuple{Float64, Float64}, timescales::Vector{Float64}=ones(length(components))) where {T<:AbstractComponent, S<:AbstractConnector}
         # Check that component names are unique
-        names = [comp.name for comp in components]
+        names = [name(comp) for comp in components]
         if length(names) != length(unique(names))
             error("Component names must be unique. Found duplicate names: $(names)")
         end
@@ -53,6 +53,15 @@ struct MermaidProblem <: AbstractMermaidProblem
 end
 
 function MermaidProblem(; components, connectors, tspan, timescales=ones(length(components)))
+    if isempty(components)
+        components = AbstractComponent[]
+    end
+    if isempty(connectors)
+        connectors = AbstractConnector[]
+    end
+    if ! (timescales isa Vector{Float64})
+        timescales = convert(Vector{Float64}, timescales)
+    end
     return MermaidProblem(components, connectors, tspan, timescales)
 end
 

@@ -1,4 +1,4 @@
-function build_depedency_graph(conns::Vector{AbstractConnector})
+function build_depedency_graph(conns::Vector{T}) where {T<:AbstractConnector}
     graph = MetaGraph(DiGraph(), ConnectedVariable)
 
     # Strip indexes from the variable names in the connections
@@ -25,7 +25,7 @@ function build_depedency_graph(conns::Vector{AbstractConnector})
     return graph
 end
 
-function report_algebraic_loop(conns::Vector{AbstractConnector})
+function report_algebraic_loop(conns::Vector{T}) where {T<:AbstractConnector}
     graph = build_depedency_graph(conns)
     if is_cyclic(graph)
         cycles = simplecycles(graph)
