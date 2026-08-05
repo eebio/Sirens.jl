@@ -30,7 +30,7 @@ The time `t` must be within `[sol.t[1], sol.t[end]]`, otherwise a `BoundsError` 
 sol(2.5)  # Interpolate solution at time t=2.5
 ```
 """
-struct MermaidSolution{X, Y} <: AbstractMermaidSolution
+struct MermaidSolution{X, Y <: MermaidSolutionData} <: AbstractMermaidSolution
     t::X
     u::Y
 end
@@ -49,11 +49,8 @@ Create a [MermaidSolution](@ref) object initialized for the `save_vars`/variable
     for each variable to be saved.
 """
 function MermaidSolution(int::AbstractMermaidIntegrator)
-    u = Dict()
-    for var in int.save_vars
-        u[ConnectedVariable(var)] = []
-    end
-    return MermaidSolution([], u)
+    u = MermaidSolutionData(int)
+    return MermaidSolution(Vector{typeof(int.currtime)}(), u)
 end
 
 """
@@ -69,9 +66,15 @@ Update the [MermaidSolution](@ref) `sol` with the current time and state from th
 """
 function update_solution!(sol::AbstractMermaidSolution, merInt::AbstractMermaidIntegrator)
     push!(sol.t, merInt.currtime)
-    for key in keys(sol.u)
-        push!(sol.u[key], getstate(merInt, key; copy = true))
-    end
+    _push_states!(sol.u.values, sol.u.keys, merInt)
+    return sol
+end
+
+@inline _push_states!(::Tuple{}, ::Tuple{}, merInt) = nothing
+@inline function _push_states!(values::Tuple, keys::Tuple, merInt)
+    push!(first(values), getstate(merInt, first(keys); copy=true))
+    _push_states!(Base.tail(values), Base.tail(keys), merInt)
+    return nothing
 end
 
 """
@@ -206,7 +209,7 @@ struct MermaidSolutionData{K<:Tuple, V<:Tuple} <: AbstractDict{AbstractConnected
 end
 
 function MermaidSolutionData(merInt::AbstractMermaidIntegrator)
-    keys = Tuple(merInt.save_vars)
+    keys = Tuple(ConnectedVariable(var) for var in merInt.save_vars)
     values = Tuple(Vector{state_type(merInt, key)}() for key in keys)
     return MermaidSolutionData(keys, values)
 end
