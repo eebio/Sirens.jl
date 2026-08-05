@@ -53,7 +53,7 @@ function Mermaid.AgentsComponent(model::StandardABM;
 end
 
 function CommonSolve.init(c::AgentsComponent)
-    integrator = AgentsComponentIntegrator(deepcopy(c.model), 0.0, c)
+    integrator = AgentsComponentIntegrator(c.model, 0.0, c)
     return integrator
 end
 
