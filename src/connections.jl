@@ -90,7 +90,7 @@ function _parse_index(s::AbstractString)::Union{Vector{Int}, Int}
     # Handle vector notation: "[1, 3]"
     if startswith(s, '[') && endswith(s, ']')
         inner = s[2:(end-1)]
-        return parse.(Int, split(inner, ','))
+        return Int[parse(Int, x) for x in split(inner, ',')]
     end
     # Handle range notation: "1:5"
     if contains(s, ':')
