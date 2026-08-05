@@ -100,6 +100,8 @@ end
         a = ConnectedVariable("ode.happy")
         b = ConnectedVariable("Schelling.min_to_be_happy")
         @test_opt Connector([a], [b])
+        # Or no instability if you use a full constructor rather than a string constructor
+        @test_opt Connector([ConnectedVariable("ode", "happy", nothing, nothing)], [ConnectedVariable("Schelling", "min_to_be_happy", nothing, nothing)])
 
         @test_opt MermaidProblem((c1, c2), (conn,), (0.0, 100.0)) broken = true
         # But return type is correctly inferred
