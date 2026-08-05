@@ -114,14 +114,21 @@ possibly with a transformation function.
 - `outputs::Tuple{<:AbstractConnectedVariable}`: Output variables for the connector.
 - `func::Union{Nothing,Function}`: Optional function to transform inputs to outputs.
 """
-struct Connector{I,O} <: AbstractConnector
-    inputs::I
-    outputs::O
+struct Connector <: AbstractConnector
+    inputs::Vector{ConnectedVariable}
+    outputs::Vector{ConnectedVariable}
     func::Union{Nothing,Function}
+
+    function Connector(inputs, outputs, func)
+        inputs = _ensure_connected_variables(inputs)
+        outputs = _ensure_connected_variables(outputs)
+        new(inputs, outputs, func)
+    end
 end
 
 """
     Connector(inputs, outputs; func=nothing)
+    Connector(; inputs, outputs, func=nothing)
 
 Construct a [Connector](@ref) from string names for inputs and outputs.
 
@@ -168,11 +175,12 @@ are passed to component `getstate`/`setstate!` implementations:
 
 See also [MinimumTimeStepper](@ref).
 """
-function Connector(; inputs::Union{Tuple,Vector}, outputs::Union{Tuple,Vector},
-    func=nothing)
-    inputs_cv = _ensure_connected_variables(inputs)
-    outputs_cv = _ensure_connected_variables(outputs)
-    return Connector(inputs_cv, outputs_cv, func)
+function Connector(; inputs::Union{Tuple,Vector}, outputs::Union{Tuple,Vector}, func=nothing)
+    return Connector(inputs, outputs, func)
+end
+
+function Connector(inputs, outputs)
+    return Connector(inputs, outputs, nothing)
 end
 
 @inline function _ensure_connected_variables(vars)
