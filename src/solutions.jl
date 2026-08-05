@@ -194,3 +194,42 @@ function (sol::AbstractMermaidSolution)(t::Real)
     end
     return MermaidSolution([t], states)
 end
+
+function state_type(merInt, cv)
+    state = getstate(merInt, cv)
+    return typeof(state)
+end
+
+struct MermaidSolutionData{K<:Tuple, V<:Tuple} <: AbstractDict{AbstractConnectedVariable, Any}
+    keys::K
+    values::V
+end
+
+function MermaidSolutionData(merInt::AbstractMermaidIntegrator)
+    keys = Tuple(merInt.save_vars)
+    values = Tuple(Vector{state_type(merInt, key)}() for key in keys)
+    return MermaidSolutionData(keys, values)
+end
+
+function Base.length(sol::MermaidSolutionData)
+    return length(sol.keys)
+end
+
+function Base.iterate(sol::MermaidSolutionData, state=1)
+    if state > length(sol)
+        return nothing
+    end
+    return (sol.keys[state], sol.values[state]), state + 1
+end
+
+function Base.haskey(sol::MermaidSolutionData, key)
+    return key in sol.keys
+end
+
+function Base.get(sol::MermaidSolutionData, key, default)
+    idx = findfirst(isequal(key), sol.keys)
+    if isnothing(idx)
+        return default
+    end
+    return sol.values[idx]
+end
