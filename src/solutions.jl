@@ -142,8 +142,8 @@ function Base.getindex(sol::AbstractMermaidSolution, index::Integer)
     if index < 1 || index > length(sol.t)
         throw(BoundsError(sol.t, index))
     end
-    return MermaidSolution(
-        [sol.t[index]], Dict([var => sol.u[var][index] for var in keys(sol.u)]))
+    data = MermaidSolutionData(keys(sol.u), map(v -> v[index], values(sol.u)))
+    return MermaidSolution(sol.t[[index]], data)
 end
 
 """
@@ -191,11 +191,8 @@ function (sol::AbstractMermaidSolution)(t::Real)
         return sol[lb]
     end
     change = (t - sol.t[lb]) / (sol.t[ub] - sol.t[lb])
-    states = Dict()
-    for var in keys(sol.u)
-        states[var] = interpolate_state(sol.u[var][lb], sol.u[var][ub], change)
-    end
-    return MermaidSolution([t], states)
+    data = MermaidSolutionData(keys(sol.u), map(v -> interpolate_state(v[lb], v[ub], change), values(sol.u)))
+    return MermaidSolution([t], data)
 end
 
 function state_type(merInt, cv)
