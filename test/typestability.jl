@@ -66,7 +66,7 @@ end
             name="ode",
             timestep=1.0,
             state_names=OrderedDict("happy" => 1),
-            intkwargs=(:dt => 1.0,)
+            intkwargs=(dt = 1.0,)
         )
 
         conn = Connector(

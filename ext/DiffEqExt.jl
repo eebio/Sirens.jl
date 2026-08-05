@@ -45,7 +45,7 @@ comp = DEComponent(prob, Tsit5(); name=\"ode_comp\",
 ```
 """
 function Mermaid.DEComponent(model::DiffEqBase.AbstractDEProblem,
-        alg; name = "DE", timestep::Real = 1.0, intkwargs = (),
+        alg; name = "DE", timestep::Real = 1.0, intkwargs = (;),
         state_names = Dict{String, Any}())
     return Mermaid.DEComponent(model, name, state_names, timestep, alg, intkwargs)
 end
@@ -56,11 +56,11 @@ end
 
 function CommonSolve.init(c::Mermaid.DEComponent)
     if isnothing(c.alg)
-        return Mermaid.DEComponentIntegrator(
-            init(c.model; c.intkwargs...), c)
+        integrator = init(c.model; c.intkwargs...)
+        return Mermaid.DEComponentIntegrator(integrator, c)
     else
-        return Mermaid.DEComponentIntegrator(
-            init(c.model, c.alg; c.intkwargs...), c)
+        integrator = init(c.model, c.alg; c.intkwargs...)
+        return Mermaid.DEComponentIntegrator(integrator, c)
     end
 end
 
