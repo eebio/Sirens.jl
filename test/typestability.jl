@@ -101,7 +101,10 @@ end
         b = ConnectedVariable("Schelling.min_to_be_happy")
         @test_opt Connector([a], [b])
 
-        @test_opt MermaidProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
+        @test_opt MermaidProblem((c1, c2), (conn,), (0.0, 100.0)) broken = true
+        # But return type is correctly inferred
+        types = Base.return_types(MermaidProblem, (typeof((c1, c2)), typeof((conn,)), typeof((0.0, 100.0))))
+        @test isconcretetype(types[1])
 
         @test_opt init(mp, alg)
         @test_opt solve!(intMer)

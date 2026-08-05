@@ -39,4 +39,5 @@ function report_algebraic_loop(conns)
         end
         @warn str
     end
+    return nothing
 end

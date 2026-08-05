@@ -2,6 +2,7 @@ using CommonSolve
 
 """
     MermaidProblem <: AbstractMermaidProblem
+    MermaidProblem(components, connectors, tspan, timescales=ones(length(components)))
     MermaidProblem(;
         components::Union{Tuple, Vector},
         connectors::Union{Tuple, Vector},
@@ -10,7 +11,7 @@ using CommonSolve
 
 Defines a Mermaid hybrid simulation problem.
 
-# Keyword Arguments
+# Arguments
 - `components::Union{Tuple, Vector}`: Tuple or Vector of [Components](@ref AbstractComponent). Order is significant
     because it determines stepping order when multiple components can be stepped together.
     Component names must be unique. Using a tuple preserves type information for each element.
@@ -38,7 +39,23 @@ struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
     tspan::NTuple{2,Float64}
     timescales::Vector{Float64}
 
-    function MermaidProblem(components::C, connectors::CC, tspan::NTuple{2,Float64}, timescales::Vector{Float64}) where {C<:Tuple,CC<:Tuple}
+    function MermaidProblem(components, connectors, tspan, timescales)
+
+        # Handle types
+        # Components and connectors should be tuples for type stability
+        components = components isa Tuple ? components : tuple(components...)
+        connectors = connectors isa Tuple ? connectors : tuple(connectors...)
+
+        # Validate tspan length and convert to proper type
+        if length(tspan) < 2
+            throw(ArgumentError("tspan must have exactly 2 elements, got $(length(tspan))"))
+        end
+        tspan::NTuple{2,Float64} = (Float64(tspan[1]), Float64(tspan[2]))
+
+        # timescales should be a vector of Float64 and same length as components
+        @assert length(timescales) == length(components) "Length of timescales must match number of components."
+        timescales = timescales isa Vector{Float64} ? timescales : Float64[convert(Float64, ts) for ts in timescales]
+
         # Check that component names are unique
         names = [name(comp) for comp in components]
         if length(names) != length(unique(names))
@@ -48,25 +65,16 @@ struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
         # Check for algebraic loops in the connections
         report_algebraic_loop(connectors)
 
-        return new{C,CC}(components, connectors, tspan, timescales)
+        return new{typeof(components), typeof(connectors)}(components, connectors, tspan, timescales)
     end
 end
 
-function MermaidProblem(; components::Union{Tuple,Vector}, connectors::Union{Tuple,Vector},
-    tspan::Union{Tuple,AbstractVector}, timescales::Union{Tuple, AbstractVector}=ones(length(components)))
-    # Convert vectors to tuples
-    comp_tuple = components isa Tuple ? components : tuple(components...)
-    conn_tuple = connectors isa Tuple ? connectors : tuple(connectors...)
+function MermaidProblem(; components, connectors, tspan, timescales=ones(length(components)))
+    return MermaidProblem(components, connectors, tspan, timescales)
+end
 
-    # Validate tspan length and convert to proper type
-    if length(tspan) != 2
-       throw(ArgumentError("tspan must have exactly 2 elements, got $(length(tspan))"))
-    end
-    tspan_tuple::NTuple{2,Float64} = (Float64(tspan[1]), Float64(tspan[2]))
-
-    timescales = [convert(Float64, ts) for ts in timescales]
-
-    return MermaidProblem(comp_tuple, conn_tuple, tspan_tuple, timescales)
+function MermaidProblem(components, connectors, tspan)
+    return MermaidProblem(components, connectors, tspan, ones(length(components)))
 end
 
 """
