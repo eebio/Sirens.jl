@@ -228,12 +228,16 @@ function should_save(merInt::AbstractMermaidIntegrator, saveat::Function)
 end
 
 function getstate(merInt::AbstractMermaidIntegrator, key::AbstractConnectedVariable; kwargs...)
-    # Get the state of the component based on the key
-    for integrator in merInt.integrators
-        if name(integrator) == key.component
-            return getstate(integrator, key; kwargs...)
-        end
+    return _getstate_by_name(merInt.integrators, key; kwargs...)
+end
+
+@inline _getstate_by_name(::Tuple{}, key::AbstractConnectedVariable; kwargs...) = nothing
+@inline function _getstate_by_name(integrators::Tuple, key::AbstractConnectedVariable; kwargs...)
+    integrator = first(integrators)
+    if name(integrator) == key.component
+        return getstate(integrator, key; kwargs...)
     end
+    return _getstate_by_name(Base.tail(integrators), key; kwargs...)
 end
 
 function gettime(merInt::AbstractMermaidIntegrator)
@@ -242,13 +246,18 @@ function gettime(merInt::AbstractMermaidIntegrator)
 end
 
 function setstate!(merInt::AbstractMermaidIntegrator, key::AbstractConnectedVariable, value)
-    # Set the state of the component based on the key
-    for integrator in merInt.integrators
-        if name(integrator) == key.component
-            setstate!(integrator, key, value)
-            return nothing
-        end
+    _setstate_by_name!(merInt.integrators, key, value)
+    return nothing
+end
+
+@inline _setstate_by_name!(::Tuple{}, key::AbstractConnectedVariable, value) = nothing
+@inline function _setstate_by_name!(integrators::Tuple, key::AbstractConnectedVariable, value)
+    integrator = first(integrators)
+    if name(integrator) == key.component
+        setstate!(integrator, key, value)
+        return nothing
     end
+    return _setstate_by_name!(Base.tail(integrators), key, value)
 end
 
 """
