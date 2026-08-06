@@ -160,11 +160,6 @@ function CommonSolve.init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolv
         saveat = prob.tspan[1]:saveat:prob.tspan[2]
     end
 
-    # Validate tspan length
-    if length(prob.tspan) != 2
-        throw(ArgumentError("tspan must have exactly 2 elements, got $(length(prob.tspan))"))
-    end
-
     return MermaidIntegrator(
         integrators, prob.connectors, prob.tspan, 0.0, alg, save_vars, saveat, prob.timescales)
 end
