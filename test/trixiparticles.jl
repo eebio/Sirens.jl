@@ -142,7 +142,7 @@ end
         name = "ODE",
         timestep = 0.002,
         state_names = OrderedDict("integral" => 1, "pressure" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     function pressure_interpolation(state, semi)

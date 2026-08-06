@@ -9,7 +9,7 @@ using OrderedCollections: OrderedDict
 """
     TrixiParticlesComponent(semi::TrixiParticles.Semidiscretization, alg;
                 name::String="TrixiParticles", timestep::Float64=1.0,
-                intkwargs::Tuple=(), tspan=(0.0, Inf),
+                intkwargs::NamedTuple=(;), tspan=(0.0, Inf),
                 state_names::Dict{String,Any}=Dict{String,Any}())
 
 A Mermaid component that wraps a TrixiParticles.jl particle method simulation.
@@ -35,7 +35,7 @@ A Mermaid component that wraps a TrixiParticles.jl particle method simulation.
 - `#semi`: The TrixiParticles semidiscretization object (read-only; cannot be used with `setstate!`).
 """
 function Mermaid.TrixiParticlesComponent(semi::TrixiParticles.Semidiscretization,
-        alg; name = "TrixiParticles", timestep::Real = 1.0, intkwargs = (),
+        alg; name = "TrixiParticles", timestep::Real = 1.0, intkwargs = (;),
         tspan = (0.0, Inf), state_names = Dict{String, Any}())
     ode = semidiscretize(semi, tspan)
     return Mermaid.TrixiParticlesComponent(

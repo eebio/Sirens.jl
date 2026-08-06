@@ -66,7 +66,7 @@ end
             name="ode",
             timestep=1.0,
             state_names=OrderedDict("happy" => 1),
-            intkwargs=(dt = 1.0,)
+            intkwargs=(;dt = 1.0)
         )
 
         conn = Connector(
@@ -91,7 +91,7 @@ end
             name="ode",
             timestep=1.0,
             state_names=OrderedDict("happy" => 1),
-            intkwargs=(:dt => 1.0,)
+            intkwargs=(;dt = 1.0)
         )
 
         r = @report_opt Connector(["ode.happy"], ["Schelling.min_to_be_happy"])

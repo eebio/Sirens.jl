@@ -40,7 +40,7 @@ rep = DEComponent(sde,
     state_names = Dict("gfp" => variable_index(sde, :gfp),
         "growth_rate" => variable_index(sde, :gr), "volume" => variable_index(
             sde, :V)),
-    timestep = agents.dt, intkwargs = (:save_everystep => false, :maxiters => Inf))
+    timestep = agents.dt, intkwargs = (;save_everystep = false, maxiters = Inf))
 
 rep_imp = DEComponent(sde_improved,
     EM();
@@ -48,7 +48,7 @@ rep_imp = DEComponent(sde_improved,
     state_names = Dict("gfp" => variable_index(improved, :gfp),
         "growth_rate" => variable_index(improved, :gr), "volume" => variable_index(
             improved, :V)),
-    timestep = agents.dt, intkwargs = (:save_everystep => false, :maxiters => Inf))
+    timestep = agents.dt, intkwargs = (;save_everystep = false, maxiters = Inf))
 
 abm = AgentsComponent(agents;
     name = "cells",
@@ -66,7 +66,7 @@ end
 pde = DEComponent(nutrient_prob, Tsit5();
     name = "PDE",
     state_names = Dict(), # Catalyst spatial doesn't support variable_index for spatial variables
-    timestep = agents.dt, intkwargs = (:save_everystep => false, :maxiters => Inf)
+    timestep = agents.dt, intkwargs = (;save_everystep = false, maxiters = Inf)
 )
 
 gro = DEComponent(growth,
@@ -76,9 +76,9 @@ gro = DEComponent(growth,
         "s" => variable_index(growth.f.sys, :s), "λ" => growth.f.sys.λ,
         "mass" => growth.f.sys.M,
         "import" => growth.f.sys.ν_imp),
-    timestep = agents.dt, intkwargs = (
-        :maxiters => Inf, :isoutofdomain => (u, p, t) -> any(x -> x < 0, u),
-        :save_everystep => false))
+    timestep = agents.dt, intkwargs = (;
+        maxiters = Inf, isoutofdomain = (u, p, t) -> any(x -> x < 0, u),
+        save_everystep = false))
 
 dup_r = DuplicatedComponent(rep, []; default_state = sde.u0)
 

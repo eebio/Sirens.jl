@@ -7,7 +7,7 @@ using OrderedCollections: OrderedDict
 
 """
     DEComponent(model::DiffEqBase.AbstractDEProblem, alg;
-                name::String="DE", timestep::Float64=1.0, intkwargs::Tuple=(),
+                name::String="DE", timestep::Float64=1.0, intkwargs::NamedTuple=(;),
                 state_names::Dict{String,Any}=Dict{String,Any}())
     DEComponent(model::DiffEqBase.AbstractDEProblem; kwargs...)
 

@@ -70,7 +70,7 @@
         state_names = OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
             "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
         timestep = 0.0001,
-        intkwargs = (:adaptive => false, :dt => 0.0001)
+        intkwargs = (;adaptive = false, dt = 0.0001)
     )
 
     function f2(u, p, t)
@@ -84,7 +84,7 @@
         name = "G",
         timestep = 0.0001,
         state_names = OrderedDict("g" => 1),
-        intkwargs = (:adaptive => false, :dt => 0.0001)
+        intkwargs = (;adaptive = false, dt = 0.0001)
     )
 
     conn = Connector(
