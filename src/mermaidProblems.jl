@@ -270,7 +270,7 @@ Get the current time of the integrator.
 # Returns
 - The current time of the integrator.
 """
-function gettime(int::AbstractComponentIntegrator)
+function gettime(int::AbstractComponentIntegrator)::Real
     getstate(
         int, ConnectedVariable(name(int), "#time", nothing, nothing))
 end
