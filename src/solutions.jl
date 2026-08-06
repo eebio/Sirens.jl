@@ -1,11 +1,17 @@
+struct MermaidSolutionData{K<:Tuple,V<:Tuple} <: AbstractDict{AbstractConnectedVariable,Any}
+    keys::K
+    values::V
+end
+
 """
-    MermaidSolution{X, Y} <: AbstractMermaidSolution
+    MermaidSolution{X, Y<:MermaidSolutionData} <: AbstractMermaidSolution
 
 Stores the solution of a [MermaidProblem](@ref) over time.
 
 # Fields
 - `t::X`: Time points at which the solution is saved.
-- `u::Y`: Dictionary mapping variables to their solution arrays.
+- `u::Y<:MermaidSolutionData`: A dictionary-like structure storing the saved states for each
+    variable in the problem.
 
 # Interpolation
 
@@ -142,7 +148,7 @@ function Base.getindex(sol::AbstractMermaidSolution, index::Integer)
     if index < 1 || index > length(sol.t)
         throw(BoundsError(sol.t, index))
     end
-    data = MermaidSolutionData(keys(sol.u), map(v -> v[index], values(sol.u)))
+    data = MermaidSolutionData(sol.u.keys, map(v -> v[index], sol.u.values))
     return MermaidSolution(sol.t[[index]], data)
 end
 
@@ -191,18 +197,13 @@ function (sol::AbstractMermaidSolution)(t::Real)
         return sol[lb]
     end
     change = (t - sol.t[lb]) / (sol.t[ub] - sol.t[lb])
-    data = MermaidSolutionData(keys(sol.u), map(v -> interpolate_state(v[lb], v[ub], change), values(sol.u)))
+    data = MermaidSolutionData(sol.u.keys, map(v -> interpolate_state(v[lb], v[ub], change), sol.u.values))
     return MermaidSolution([t], data)
 end
 
 function state_type(merInt, cv)
     state = getstate(merInt, cv)
     return typeof(state)
-end
-
-struct MermaidSolutionData{K<:Tuple, V<:Tuple} <: AbstractDict{AbstractConnectedVariable, Any}
-    keys::K
-    values::V
 end
 
 function MermaidSolutionData(merInt::AbstractMermaidIntegrator)

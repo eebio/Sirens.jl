@@ -11,16 +11,11 @@ Points to a variable within a component.
 - `duplicatedindex::Union{Nothing,Vector{Int}}`: Index for duplicated
     components, if applicable.
 """
-struct ConnectedVariable{U<:AbstractString,V<:AbstractString,X<:Union{Nothing,Vector{Int},Int},Y<:Union{Nothing,Vector{Int},Int}} <: AbstractConnectedVariable
+@auto_hash_equals struct ConnectedVariable{U<:AbstractString,V<:AbstractString,X<:Union{Nothing,Vector{Int},Int},Y<:Union{Nothing,Vector{Int},Int}} <: AbstractConnectedVariable
     component::U
     variable::V
     variableindex::X
     duplicatedindex::Y
-end
-
-function Base.hash(cv::ConnectedVariable, h::UInt) return hash(fullname(cv), h) end
-function Base.isequal(cv1::ConnectedVariable, cv2::ConnectedVariable)
-    return fullname(cv1) == fullname(cv2)
 end
 
 """
