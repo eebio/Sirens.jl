@@ -1,6 +1,6 @@
 @testitem "JET - Package" begin
     using JET
-    if JET.JET_AVAILABLE
+    if VERSION >= v"1.12" && JET.JET_AVAILABLE
         test_package(Mermaid; target_modules=(Mermaid,))
     end
 end
@@ -10,7 +10,7 @@ end
     using Agents, OrdinaryDiffEq
     using Random
 
-    if JET.JET_AVAILABLE
+    if VERSION >= v"1.12" && JET.JET_AVAILABLE
         Random.seed!(1234)
 
         space = GridSpace((20, 20))
