@@ -211,6 +211,11 @@ function Base.fullname(var::AbstractConnectedVariable)
     return string(comp, dupindex, ".", variable, index)
 end
 
+@inline _has_component(::Tuple{}, target) = false
+@inline function _has_component(integrators::Tuple, target)
+    return name(first(integrators)) == target || _has_component(Base.tail(integrators), target)
+end
+
 """
     runconnection(merInt::AbstractMermaidIntegrator, conn::AbstractConnector)
 
@@ -225,13 +230,8 @@ function runconnection(merInt::AbstractMermaidIntegrator, conn::AbstractConnecto
     # Get the values of the connectors inputs
     inputs = []
     for input in conn.inputs
-        # Find the corresponding integrator
-        index = findfirst(
-            i -> name(i) == input.component, merInt.integrators)
-        if index !== nothing
-            integrator = merInt.integrators[index]
-            # Get the value of the input from the integrator
-            push!(inputs, getstate(integrator, input))
+        if _has_component(merInt.integrators, input.component)
+            push!(inputs, getstate(merInt, input))
         end
     end
     if isnothing(conn.func)
@@ -265,15 +265,11 @@ function runconnection!(merInt::AbstractMermaidIntegrator, conn::AbstractConnect
     outputs = runconnection(merInt, conn)
     # Set the outputs in the corresponding integrators
     for output in conn.outputs
-        # Find the corresponding integrator
-        index = findfirst(
-            i -> name(i) == output.component, merInt.integrators)
-        if index !== nothing
-            integrator = merInt.integrators[index]
-            # Set the input value for the integrator
-            setstate!(integrator, output, outputs)
+        if _has_component(merInt.integrators, output.component)
+            setstate!(merInt, output, outputs)
         end
     end
+    return nothing
 end
 
 function checkconnection(conn::AbstractConnector, merInt::AbstractMermaidIntegrator)
