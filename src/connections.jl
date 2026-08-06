@@ -58,20 +58,21 @@ function ConnectedVariable(name::AbstractString)
     # Parse the variable name to extract its parts
     component, variable = split(name, ".")
     # Is there a variable index
-    index::Union{Nothing,Vector{Int},Int} = if contains(variable, "[")
-        variable, idx_str = split(variable, "[")
-        _parse_index(strip(idx_str, ']'))
-    else
-        nothing
-    end
+    variable, idx_str = _split_bracket(variable)
+    index::Union{Nothing,Vector{Int},Int} = isnothing(idx_str) ? nothing : _parse_index(idx_str)
     # Is there a duplicated index
-    dupindex::Union{Nothing,Vector{Int},Int} = if contains(component, "[")
-        component, dup_str = split(component, "[")
-        _parse_index(strip(dup_str, ']'))
-    else
-        nothing
-    end
+    component, dup_str = _split_bracket(component)
+    dupindex::Union{Nothing,Vector{Int},Int} = isnothing(dup_str) ? nothing : _parse_index(dup_str)
     return ConnectedVariable(component, variable, index, dupindex)
+end
+
+function _split_bracket(s::AbstractString)
+    idx = findfirst('[', s)
+    isnothing(idx) && return s, nothing
+    endswith(s, ']') || throw(ArgumentError("Malformed index syntax in \"$s\""))
+    name = s[1:prevind(s, idx)]
+    inner = s[nextind(s, idx):prevind(s, lastindex(s))]
+    return name, inner
 end
 
 """
