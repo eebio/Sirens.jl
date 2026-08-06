@@ -18,6 +18,10 @@ Points to a variable within a component.
     duplicatedindex::Y
 end
 
+function ConnectedVariable(component::AbstractString, variable::AbstractString)
+    return ConnectedVariable(component, variable, nothing, nothing)
+end
+
 """
     ConnectedVariable(name::AbstractString)
 

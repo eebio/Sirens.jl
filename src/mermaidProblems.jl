@@ -85,26 +85,26 @@ end
         tspan::Tuple{Float64, Float64},
         currtime::Float64,
         alg::AbstractMermaidSolver,
-        save_vars::Vector{<:AbstractString},
+        save_vars::Vector{<:Union{ConnectedVariable,AbstractString}},
         saveat::Union{Function, AbstractVector},
         timescales::Vector{Float64})
 
 Created using `init(prob::MermaidProblem, alg::AbstractMermaidSolver; save_vars=[])`. All fields are considered internal.
 """
 mutable struct MermaidIntegrator{
-    I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,S<:Union{Function,AbstractVector}} <:
+    I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,SV<:Tuple,S<:Union{Function,AbstractVector}} <:
                AbstractMermaidIntegrator
     integrators::I
     connectors::CC
     tspan::Tuple{Float64, Float64}
     currtime::Float64
     alg::X
-    save_vars::Vector{<:AbstractString}
+    save_vars::SV
     saveat::S
     timescales::Vector{Float64}
 
-    function MermaidIntegrator(integrators::I, connectors::CC, tspan::Tuple{Float64, Float64}, currtime::Float64, alg::X, save_vars::Vector{<:AbstractString}, saveat::S, timescales::Vector{<:Real}) where {I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,S<:Union{Function,AbstractVector}}
-        return new{I,CC,X,S}(integrators, connectors, tspan, currtime, alg, save_vars, saveat, timescales)
+    function MermaidIntegrator(integrators::I, connectors::CC, tspan::Tuple{Float64, Float64}, currtime::Float64, alg::X, save_vars::SV, saveat::S, timescales::Vector{<:Real}) where {I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,SV<:Tuple,S<:Union{Function,AbstractVector}}
+        return new{I,CC,X,SV,S}(integrators, connectors, tspan, currtime, alg, save_vars, saveat, timescales)
     end
 end
 
@@ -123,6 +123,7 @@ Defines the integrator for a Mermaid hybrid simulation.
     - `:none` or `String[]`: Save no variables (time is still recorded).
     - `Vector{String}`: A vector of connected variable fullnames to save, including optional
       indices like `"forest.life[1]"` or `"tree[1:10].life"`.
+    - `Tuple{Vararg{ConnectedVariable}}`: A tuple of [ConnectedVariable](@ref) objects to save.
 - `saveat`: When to save the variables during the simulation. Options include:
     - `nothing` (default): Save after initialization and after every Mermaid event.
     - A number `Δt`: Save at times `tspan[1]:Δt:tspan[2]`.
@@ -138,19 +139,17 @@ function CommonSolve.init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolv
     integrators = map(c -> something(init(c)), prob.components)
 
     # Process save_vars
-    if isnothing(save_vars) || save_vars == :all
-        tmp = String[]
-        for int in integrators
-            for var in variables(int)
-                if var[1] != '#' || save_vars == :all
-                    push!(tmp, string(name(int), ".", var))
-                end
-            end
-        end
-        save_vars = tmp
+    if isnothing(save_vars)
+        save_vars = Tuple(ConnectedVariable(name(int), var) for int in integrators for var in variables(int) if var[1] != '#')
     end
-    if (save_vars isa AbstractVector && length(save_vars) == 0) || save_vars == :none
-        save_vars = String[]
+    if save_vars == :all
+        save_vars = Tuple(ConnectedVariable(name(int), var) for int in integrators for var in variables(int))
+    end
+    if (applicable(length, save_vars) && length(save_vars) == 0) || save_vars == :none
+        save_vars = ()
+    end
+    if save_vars isa AbstractVector{<:AbstractString}
+        save_vars = Tuple(ConnectedVariable.(save_vars))
     end
 
     # Process saveat

@@ -207,7 +207,7 @@ function state_type(merInt, cv)
 end
 
 function MermaidSolutionData(merInt::AbstractMermaidIntegrator)
-    keys = Tuple(ConnectedVariable(var) for var in merInt.save_vars)
+    keys = Tuple(merInt.save_vars)
     values = Tuple(Vector{state_type(merInt, key)}() for key in keys)
     return MermaidSolutionData(keys, values)
 end
