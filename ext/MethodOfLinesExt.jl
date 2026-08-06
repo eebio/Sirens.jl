@@ -46,7 +46,7 @@ end
 
 function CommonSolve.init(c::MOLComponent)
     integrator = MOLComponentIntegrator(
-        init(c.model, c.alg; dt = c.timestep, c.intkwargs...), c)
+        init(c.model, c.alg; c.intkwargs...), c)
     return integrator
 end
 
