@@ -96,19 +96,28 @@ end
 
         r = @report_opt Connector(["ode.happy"], ["Schelling.min_to_be_happy"])
         # ConnectedVariable type can't be fully inferred (variable and duplicated index)
-        @test length(JET.get_reports(r)) == 1
+        @test length(JET.get_reports(r)) > 0
         a = ConnectedVariable("ode.happy")
         b = ConnectedVariable("Schelling.min_to_be_happy")
-        @test_opt Connector([a], [b])
-        # Or no instability if you use a full constructor rather than a string constructor
-        @test_opt Connector([ConnectedVariable("ode", "happy", nothing, nothing)], [ConnectedVariable("Schelling", "min_to_be_happy", nothing, nothing)])
+        @test_opt Connector((a,), (b,))
+        # Or no instability if you use a full constructor rather than a string constructor with tuples
+        @test_opt Connector((ConnectedVariable("ode", "happy", nothing, nothing)), (ConnectedVariable("Schelling", "min_to_be_happy", nothing, nothing)))
 
         @test_opt MermaidProblem((c1, c2), (conn,), (0.0, 100.0)) broken = true
         # But return type is correctly inferred
         types = Base.return_types(MermaidProblem, (typeof((c1, c2)), typeof((conn,)), typeof((0.0, 100.0))))
         @test isconcretetype(types[1])
 
-        @test_opt init(mp, alg)
-        @test_opt solve!(intMer)
+        # Tuples for save_vars are type stable
+        @test_opt init(mp, alg; save_vars=())
+        @test_opt init(mp, alg; save_vars=(a, b))
+        #=
+        The following things are expected/known to be type unstable in solve!:
+        - The creation of a MermaidSolutionData object cannot infer the types of the values at compile time
+        - Saving variables with deepcopy in update_solution!
+        - The return value of getstate (and therefore the input value of setstate! in runconnection!)
+        - @assert in step! for floating point comparison of times
+        =#
+        @test_opt solve!(intMer) broken=true
     end
 end

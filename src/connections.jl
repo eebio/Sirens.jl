@@ -113,15 +113,15 @@ possibly with a transformation function.
 - `outputs::Tuple{<:AbstractConnectedVariable}`: Output variables for the connector.
 - `func::Union{Nothing,Function}`: Optional function to transform inputs to outputs.
 """
-struct Connector <: AbstractConnector
-    inputs::Vector{ConnectedVariable}
-    outputs::Vector{ConnectedVariable}
+struct Connector{I,O} <: AbstractConnector where {I<:Tuple,O<:Tuple}
+    inputs::I
+    outputs::O
     func::Union{Nothing,Function}
 
     function Connector(inputs, outputs, func)
         inputs = _ensure_connected_variables(inputs)
         outputs = _ensure_connected_variables(outputs)
-        new(inputs, outputs, func)
+        new{typeof(inputs),typeof(outputs)}(inputs, outputs, func)
     end
 end
 
@@ -182,8 +182,13 @@ function Connector(inputs, outputs)
     return Connector(inputs, outputs, nothing)
 end
 
-@inline function _ensure_connected_variables(vars)
-    return ConnectedVariable[v isa ConnectedVariable ? v : ConnectedVariable(v) for v in vars]
+function _ensure_connected_variables(vars)
+    tmp = map(v -> v isa ConnectedVariable ? v : ConnectedVariable(v), vars)
+    if tmp isa Tuple
+        return tmp
+    else
+        return Tuple(tmp)
+    end
 end
 
 """
