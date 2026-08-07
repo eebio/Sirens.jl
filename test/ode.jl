@@ -30,7 +30,7 @@
         name = "Prey",
         timestep = 0.002,
         state_names = OrderedDict("prey" => 1, "predator" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     c2 = DEComponent(
@@ -38,7 +38,7 @@
         name = "Predator",
         timestep = 0.002,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     conn1 = Connector(
@@ -67,7 +67,6 @@
         name = "Predator",
         timestep = 0.002,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = ()
     )
     mp = MermaidProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 10.0))
     solve(mp, alg)
@@ -96,7 +95,7 @@ end
         name = "Prey",
         timestep = 0.002,
         state_names = OrderedDict("prey" => x, "predator" => y),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     eqs = [D(x) ~ 0
@@ -109,7 +108,7 @@ end
         name = "Predator",
         timestep = 0.002,
         state_names = OrderedDict("prey" => x, "predator" => y),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     conn1 = Connector(

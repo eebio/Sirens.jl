@@ -52,8 +52,8 @@ error1 = []
 error2 = []
 tsteps = logrange(1e-4, 1e-1, 20)
 for tstep in tsteps
-    comp1 = DEComponent(prob1, Tsit5(); name="prey_comp", state_names=Dict("x" => 1, "y" => 2), intkwargs=(abstol=1e-10, reltol=1e-6, maxiters=Inf), timestep=tstep)
-    comp2 = DEComponent(prob2, Tsit5(); name="predator_comp", state_names=Dict("x" => 1, "y" => 2), intkwargs=(abstol=1e-10, reltol=1e-6, maxiters=Inf), timestep=tstep)
+    comp1 = DEComponent(prob1, Tsit5(); name="prey_comp", state_names=Dict("x" => 1, "y" => 2), intkwargs=(;abstol=1e-10, reltol=1e-6, maxiters=Inf), timestep=tstep)
+    comp2 = DEComponent(prob2, Tsit5(); name="predator_comp", state_names=Dict("x" => 1, "y" => 2), intkwargs=(;abstol=1e-10, reltol=1e-6, maxiters=Inf), timestep=tstep)
 
     conn1 = Connector(inputs = ["prey_comp.x"], outputs = ["predator_comp.x"])
     conn2 = Connector(inputs = ["predator_comp.y"], outputs = ["prey_comp.y"])

@@ -103,7 +103,7 @@ end
         name = "SIR",
         state_names = Dict("S" => 1, "I" => 2, "R" => 3, "u" => 4),
         timestep = 1.0,
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     # Override the dynamics of the ODE with our own ODE
@@ -116,7 +116,7 @@ end
         name = "ODE",
         state_names = Dict("u" => 1),
         timestep = 1.0,
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     conn = Connector(

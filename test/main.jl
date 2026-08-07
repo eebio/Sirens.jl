@@ -1,7 +1,7 @@
 @testitem "fullname" begin
-    @test fullname(ConnectedVariable("comp", "var", 1:5, [1, 3, 5, 7])) ==
-          "comp[[1, 3, 5, 7]].var[1:5]"
-    @test fullname(ConnectedVariable("cmp", "var", 1:5, nothing)) == "cmp.var[1:5]"
+    @test fullname(ConnectedVariable("comp", "var", [1:5...], [1, 3, 5, 7])) ==
+          "comp[[1, 3, 5, 7]].var[[1, 2, 3, 4, 5]]"
+    @test fullname(ConnectedVariable("cmp", "var", [1:5...], nothing)) == "cmp.var[[1, 2, 3, 4, 5]]"
     @test fullname(ConnectedVariable("cp", "vr", nothing, [1, 3, 5, 7])) ==
           "cp[[1, 3, 5, 7]].vr"
     @test fullname(ConnectedVariable("comp", "var", nothing, nothing)) == "comp.var"
@@ -160,6 +160,9 @@ end
     @test sol(5.0)["Schelling.min_to_be_happy"] == sol["Schelling.min_to_be_happy"][1]
     @test_throws BoundsError sol(4.0)
     @test_throws BoundsError sol(6.0)
+
+    # Default behaviour of get of dict
+    @test get(sol.u, ConnectedVariable("Schell.min_to_be_happy"), :default) == :default
 end
 
 @testitem "mermaid integrator" begin
@@ -185,7 +188,7 @@ end
         name = "Prey",
         timestep = 0.002,
         state_names = OrderedDict("prey" => 1, "predator" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     c2 = DEComponent(
@@ -193,7 +196,7 @@ end
         name = "Predator",
         timestep = 0.002,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     conn1 = Connector(
@@ -321,6 +324,13 @@ end
     @test gettime(int) == 1.0
     step!(int)
     @test gettime(int) == 2.0
+
+    # If component name is wrong
+    @test isnothing(getstate(int, ConnectedVariable("Schell.list_property")))
+    setstate!(int, ConnectedVariable("Schell.list_property"), [1, 2, 3])
+
+    @test Mermaid._has_component(mp.components, "Schell") == false
+    @test Mermaid._has_component(mp.components, "Schelling") == true
 end
 
 @testitem "non-advancing component throws error" begin
@@ -400,7 +410,7 @@ end
         name = "Prey",
         timestep = 0.002,
         state_names = OrderedDict("prey" => 1, "predator" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     c2 = DEComponent(
@@ -408,7 +418,7 @@ end
         name = "Predator",
         timestep = 0.002 * 60,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002*60)
+        intkwargs = (;adaptive = false, dt = 0.002*60)
     )
 
     c3 = DEComponent(
@@ -416,7 +426,7 @@ end
         name = "Predator",
         timestep = 0.002,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     conn1 = Connector(
@@ -470,7 +480,7 @@ end
         name = "Prey",
         timestep = 0.002,
         state_names = OrderedDict("prey" => 1, "predator" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     c2 = DEComponent(
@@ -478,7 +488,7 @@ end
         name = "Predator",
         timestep = 0.002,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
 
     conn1 = Connector(
@@ -508,7 +518,7 @@ end
         name = "Predator",
         timestep = 0.002,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        intkwargs = (;adaptive = false, dt = 0.002)
     )
     @test_throws ErrorException MermaidProblem(
         components = [c1, c2, c3], connectors = [conn1, conn2], tspan = (0.0, 1.0))
@@ -516,4 +526,30 @@ end
     # tuple timescales
     mp = MermaidProblem(
         components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 1.0), timescales = (1.0, 2.0))
+
+    # tspan too short
+    @test_throws ArgumentError MermaidProblem(
+        components = [c1, c2], connectors = [conn1, conn2], tspan = [0.0])
+
+    # non-kwarg constructor
+    mp = MermaidProblem([c1, c2], [conn1, conn2], (0.0, 1.0))
+    mp = MermaidProblem([c1, c2], [conn1, conn2], [0.0, 1.0], [1.0, 1.0])
+end
+
+@testitem "connectors" begin
+    @test ConnectedVariable("comp", "var", [1, 2, 3], [4, 5]) == ConnectedVariable("comp[[4,5]].var[[1,2,3]]")
+    @test ConnectedVariable("comp", "var", [1, 2, 3], nothing) == ConnectedVariable("comp.var[[1,2,3]]")
+    @test ConnectedVariable("comp", "var", nothing, [4, 5]) == ConnectedVariable("comp[[4,5]].var")
+    @test ConnectedVariable("comp", "var", nothing, nothing) == ConnectedVariable("comp.var")
+
+    @test ConnectedVariable("comp.var[1:3]") == ConnectedVariable("comp.var[[1,2,3]]")
+
+    @test Connector((ConnectedVariable("comp1.var1"), ConnectedVariable("comp2.var2")),
+        (ConnectedVariable("comp3.var3"), ConnectedVariable("comp4.var4"))) ==
+          Connector(["comp1.var1", "comp2.var2"], ["comp3.var3", "comp4.var4"])
+
+    @test Connector((ConnectedVariable("comp1.var1"), ConnectedVariable("comp2.var2")),
+        (ConnectedVariable("comp3.var3"), ConnectedVariable("comp4.var4"))) ==
+          Connector(("comp1.var1", "comp2.var2"), ("comp3.var3", "comp4.var4"))
+
 end

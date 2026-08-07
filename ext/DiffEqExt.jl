@@ -7,7 +7,7 @@ using OrderedCollections: OrderedDict
 
 """
     DEComponent(model::DiffEqBase.AbstractDEProblem, alg;
-                name::String="DE", timestep::Float64=1.0, intkwargs::Tuple=(),
+                name::String="DE", timestep::Float64=1.0, intkwargs::NamedTuple=(;),
                 state_names::Dict{String,Any}=Dict{String,Any}())
     DEComponent(model::DiffEqBase.AbstractDEProblem; kwargs...)
 
@@ -45,7 +45,7 @@ comp = DEComponent(prob, Tsit5(); name=\"ode_comp\",
 ```
 """
 function Mermaid.DEComponent(model::DiffEqBase.AbstractDEProblem,
-        alg; name = "DE", timestep::Real = 1.0, intkwargs = (),
+        alg; name = "DE", timestep::Real = 1.0, intkwargs = (;),
         state_names = Dict{String, Any}())
     return Mermaid.DEComponent(model, name, state_names, timestep, alg, intkwargs)
 end
@@ -55,9 +55,13 @@ function Mermaid.DEComponent(model::DiffEqBase.AbstractDEProblem; kwargs...)
 end
 
 function CommonSolve.init(c::Mermaid.DEComponent)
-    integrator = Mermaid.DEComponentIntegrator(
-        init(c.model, c.alg; c.intkwargs...), c)
-    return integrator
+    if isnothing(c.alg)
+        integrator = init(c.model; c.intkwargs...)
+        return Mermaid.DEComponentIntegrator(integrator, c)
+    else
+        integrator = init(c.model, c.alg; c.intkwargs...)
+        return Mermaid.DEComponentIntegrator(integrator, c)
+    end
 end
 
 function CommonSolve.step!(compInt::Mermaid.DEComponentIntegrator)

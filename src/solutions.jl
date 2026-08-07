@@ -1,11 +1,17 @@
+struct MermaidSolutionData{K<:Tuple,V<:Tuple} <: AbstractDict{AbstractConnectedVariable,Any}
+    keys::K
+    values::V
+end
+
 """
-    MermaidSolution{X, Y} <: AbstractMermaidSolution
+    MermaidSolution{X, Y<:MermaidSolutionData} <: AbstractMermaidSolution
 
 Stores the solution of a [MermaidProblem](@ref) over time.
 
 # Fields
 - `t::X`: Time points at which the solution is saved.
-- `u::Y`: Dictionary mapping variables to their solution arrays.
+- `u::Y<:MermaidSolutionData`: A dictionary-like structure storing the saved states for each
+    variable in the problem.
 
 # Interpolation
 
@@ -30,7 +36,7 @@ The time `t` must be within `[sol.t[1], sol.t[end]]`, otherwise a `BoundsError` 
 sol(2.5)  # Interpolate solution at time t=2.5
 ```
 """
-struct MermaidSolution{X, Y} <: AbstractMermaidSolution
+struct MermaidSolution{X, Y <: MermaidSolutionData} <: AbstractMermaidSolution
     t::X
     u::Y
 end
@@ -49,11 +55,8 @@ Create a [MermaidSolution](@ref) object initialized for the `save_vars`/variable
     for each variable to be saved.
 """
 function MermaidSolution(int::AbstractMermaidIntegrator)
-    u = Dict()
-    for var in int.save_vars
-        u[ConnectedVariable(var)] = []
-    end
-    return MermaidSolution([], u)
+    u = MermaidSolutionData(int)
+    return MermaidSolution(Vector{typeof(int.currtime)}(), u)
 end
 
 """
@@ -69,9 +72,15 @@ Update the [MermaidSolution](@ref) `sol` with the current time and state from th
 """
 function update_solution!(sol::AbstractMermaidSolution, merInt::AbstractMermaidIntegrator)
     push!(sol.t, merInt.currtime)
-    for key in keys(sol.u)
-        push!(sol.u[key], getstate(merInt, key; copy = true))
-    end
+    _push_states!(sol.u.values, sol.u.keys, merInt)
+    return sol
+end
+
+@inline _push_states!(::Tuple{}, ::Tuple{}, merInt) = nothing
+@inline function _push_states!(values::Tuple, keys::Tuple, merInt)
+    push!(first(values), getstate(merInt, first(keys); copy=true))
+    _push_states!(Base.tail(values), Base.tail(keys), merInt)
+    return nothing
 end
 
 """
@@ -139,8 +148,8 @@ function Base.getindex(sol::AbstractMermaidSolution, index::Integer)
     if index < 1 || index > length(sol.t)
         throw(BoundsError(sol.t, index))
     end
-    return MermaidSolution(
-        [sol.t[index]], Dict([var => sol.u[var][index] for var in keys(sol.u)]))
+    data = MermaidSolutionData(sol.u.keys, map(v -> v[index], sol.u.values))
+    return MermaidSolution(sol.t[[index]], data)
 end
 
 """
@@ -188,9 +197,40 @@ function (sol::AbstractMermaidSolution)(t::Real)
         return sol[lb]
     end
     change = (t - sol.t[lb]) / (sol.t[ub] - sol.t[lb])
-    states = Dict()
-    for var in keys(sol.u)
-        states[var] = interpolate_state(sol.u[var][lb], sol.u[var][ub], change)
+    data = MermaidSolutionData(sol.u.keys, map(v -> interpolate_state(v[lb], v[ub], change), sol.u.values))
+    return MermaidSolution([t], data)
+end
+
+function state_type(merInt, cv)
+    state = getstate(merInt, cv)
+    return typeof(state)
+end
+
+function MermaidSolutionData(merInt::AbstractMermaidIntegrator)
+    keys = Tuple(merInt.save_vars)
+    values = Tuple(Vector{state_type(merInt, key)}() for key in keys)
+    return MermaidSolutionData(keys, values)
+end
+
+function Base.length(sol::MermaidSolutionData)
+    return length(sol.keys)
+end
+
+function Base.iterate(sol::MermaidSolutionData, state=1)
+    if state > length(sol)
+        return nothing
     end
-    return MermaidSolution([t], states)
+    return (sol.keys[state], sol.values[state]), state + 1
+end
+
+function Base.haskey(sol::MermaidSolutionData, key)
+    return key in sol.keys
+end
+
+function Base.get(sol::MermaidSolutionData, key, default)
+    idx = findfirst(isequal(key), sol.keys)
+    if isnothing(idx)
+        return default
+    end
+    return sol.values[idx]
 end

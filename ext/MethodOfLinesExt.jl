@@ -7,7 +7,7 @@ using DiffEqBase
 
 """
     MOLComponent(model::DiffEqBase.AbstractDEProblem, alg::DiffEqBase.AbstractDEAlgorithm;
-                 name::String="MOL", timestep::Real=1.0, intkwargs::Tuple=(),
+                 name::String="MOL", timestep::Real=1.0, intkwargs::NamedTuple=(;),
                  state_names::Dict{String,Any}=Dict{String,Any}())
 
 A Mermaid component that wraps a Method of Lines discretized PDE as a SciML
@@ -40,13 +40,13 @@ use a connector function to perform interpolation or other spatial transformatio
 """
 function Mermaid.MOLComponent(model::DiffEqBase.AbstractDEProblem,
         alg::DiffEqBase.AbstractDEAlgorithm; name = "MOL",
-        timestep::Real = 1.0, intkwargs = (), state_names = Dict{String, Any}())
+        timestep::Real = 1.0, intkwargs = (;), state_names = Dict{String, Any}())
     return Mermaid.MOLComponent(model, name, state_names, timestep, alg, intkwargs)
 end
 
 function CommonSolve.init(c::MOLComponent)
     integrator = MOLComponentIntegrator(
-        init(c.model, c.alg; dt = c.timestep, c.intkwargs...), c)
+        init(c.model, c.alg; c.intkwargs...), c)
     return integrator
 end
 

@@ -7,6 +7,7 @@ using OrderedCollections: OrderedDict
 export OrderedDict
 using Graphs: simplecycles, is_cyclic, DiGraph
 using MetaGraphsNext: MetaGraph, add_vertex!, add_edge!
+using AutoHashEquals
 
 # Exports
 export AbstractComponent, AbstractTimeDependentComponent, AbstractTimeIndependentComponent

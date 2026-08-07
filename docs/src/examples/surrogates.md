@@ -30,7 +30,7 @@ prob[Ki] = 144.0
 
 comp1 = DEComponent(prob, Tsit5();
     name = "cell", timestep = 1000.0, state_names = Dict("v" => V, "ki" => Ki),
-    intkwargs = (abstol = 1e-10, reltol = 1e-10, save_everystep = false, maxiters = Inf)
+    intkwargs = (;abstol = 1e-10, reltol = 1e-10, save_everystep = false, maxiters = Inf)
 )
 
 lb = prob.u0 - 0.01*abs.(prob.u0)
