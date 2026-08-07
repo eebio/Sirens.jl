@@ -26,6 +26,7 @@ export solve!, solve, init, step!
 export getstate, setstate!, gettime, settime!
 export name, timestep, variables
 export fullname, runconnection, runconnection!
+export systemdiagram
 
 # Include src files
 include("abstracts.jl")
@@ -108,5 +109,22 @@ Initialises an integrator ([AbstractComponentIntegrator](@ref))
 - `MermaidIntegrator`: The initialised integrator for the problem.
 """
 function init(::AbstractComponent) end
+
+"""
+    systemdiagram(problem::MermaidProblem; detail=:ports, direction=:LR)
+
+Create a system-topology diagram for a Mermaid problem.
+
+This method is provided by an optional visualization extension. Loading Kroki.jl enables
+the `MermaidProblem` method without adding rendering dependencies to Mermaid's core. The
+extension returns a Graphviz-backed `Kroki.Diagram`.
+
+The supported detail levels are `:components` and `:ports`; supported directions are `:LR`
+and `:TB`. Creating the diagram is local and does not render it or contact a remote service.
+"""
+function systemdiagram(problem::AbstractMermaidProblem; kwargs...)
+    throw(ArgumentError(
+        "no systemdiagram method for $(typeof(problem)); loading Kroki.jl enables MermaidProblem diagrams"))
+end
 
 end
