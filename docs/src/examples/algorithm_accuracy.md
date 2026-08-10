@@ -1,12 +1,12 @@
 # Algorithm Accuracy
 
-The only algorithm available in Mermaid is the [MinimumTimeStepper](@ref).
+The only algorithm available in Sirens is the [MinimumTimeStepper](@ref).
 You may be interested to understand how separating a system into multiple components to be solved affects its accuracy.
 
 !!! note "Accuracy doesn't always make sense"
-    In some situtations, it doesn't make sense to talk about the accuracy of a Mermaid algorithm. For example, discrete time solvers are typically perfectly accurate (to floating point tolerances) and have lower bounds on the timestep that can be used, both properties that make it impossible to assign an ``\mathcal{O}(h^n)`` accuracy to a solver. However, it can be useful to understand how these connections may affect the accuracy of continuous time components, such as differential equations.
+    In some situtations, it doesn't make sense to talk about the accuracy of a Sirens algorithm. For example, discrete time solvers are typically perfectly accurate (to floating point tolerances) and have lower bounds on the timestep that can be used, both properties that make it impossible to assign an ``\mathcal{O}(h^n)`` accuracy to a solver. However, it can be useful to understand how these connections may affect the accuracy of continuous time components, such as differential equations.
 
-We can assess the accuracy of the Mermaid solver numerically, by comparing a system of differential equations, solved once with very high accuracy, and then solved many times with different syncronisation time steps. As the synchronisation time step descreases, we should expect the accuracy to increase, and we can estimate the order accuracy from these measurements.
+We can assess the accuracy of the Sirens solver numerically, by comparing a system of differential equations, solved once with very high accuracy, and then solved many times with different syncronisation time steps. As the synchronisation time step descreases, we should expect the accuracy to increase, and we can estimate the order accuracy from these measurements.
 
 ```@example accuracy
 using OrdinaryDiffEq
@@ -27,10 +27,10 @@ sol = solve(prob, Tsit5(), abstol=1e-10, reltol=1e-6)
 plot(sol, vars=(1, 2), xlabel="Prey", ylabel="Predator", title="Lotka-Volterra Phase Plot")
 ```
 
-By using an adaptive solver with tight tolerances, we can get a very accurate estimate of the true solution which we can compare to one derived through Mermaid connections. We will set up a Mermaid simulation to reproduce the above ODE system and solve it with varying timesteps.
+By using an adaptive solver with tight tolerances, we can get a very accurate estimate of the true solution which we can compare to one derived through Sirens' connections. We will set up a Sirens simulation to reproduce the above ODE system and solve it with varying timesteps.
 
 ```@example accuracy
-using Mermaid
+using Sirens
 
 function f1!(du, u, p, t)
     du[1] = p[1] * u[1] - p[2] * u[1] * u[2]
@@ -58,7 +58,7 @@ for tstep in tsteps
     conn1 = Connector(inputs = ["prey_comp.x"], outputs = ["predator_comp.x"])
     conn2 = Connector(inputs = ["predator_comp.y"], outputs = ["prey_comp.y"])
 
-    mp = MermaidProblem(components = [comp1, comp2], connectors = [conn1, conn2], tspan=tspan)
+    mp = SirenProblem(components = [comp1, comp2], connectors = [conn1, conn2], tspan=tspan)
     alg = MinimumTimeStepper()
     solMer = solve(mp, alg; saveat = (integrator, t) -> t>0.9, save_vars = ["prey_comp.x", "predator_comp.y"])
 
@@ -85,4 +85,4 @@ grad2 = sum((logerror2 .- mean(logerror2)) .* (logtsteps .- mean(logtsteps))) / 
 @show grad1, grad2
 ```
 
-The Mermaid solver accuracy is ``\mathcal{O}(h)``. In future this may be improved upon, in particular 2nd order methods ``(\mathcal{O}(h^2))``should be achievable through the current interface.
+The Sirens solver accuracy is ``\mathcal{O}(h)``. In future this may be improved upon, in particular 2nd order methods ``(\mathcal{O}(h^2))``should be achievable through the current interface.

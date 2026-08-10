@@ -1,6 +1,6 @@
 module SurrogatesExt
 
-using Mermaid
+using Sirens
 using Surrogates
 using CommonSolve
 using OrderedCollections: OrderedDict
@@ -26,11 +26,11 @@ Represents a component that is replaced with a surrogate in the simulation, spee
 - `n_samples::Integer`: Number of samples to use for training the surrogate. Defaults to 1000.
 - `n_epochs::Integer`: Number of training epochs for the surrogate. Defaults to 1000.
 """
-function Mermaid.SurrogateComponent(
+function Sirens.SurrogateComponent(
         component::AbstractTimeDependentComponent, surrogate, lower_bound, upper_bound;
         name::AbstractString = component.name, timestep::Real = component.timestep,
         state_names = component.state_names, n_samples::Integer = 1000, kwargs = ())
-    return Mermaid.SurrogateComponent(
+    return Sirens.SurrogateComponent(
         component, name, surrogate, timestep, state_names, lower_bound,
         upper_bound, n_samples, kwargs)
 end
@@ -72,7 +72,7 @@ function CommonSolve.step!(compInt::SurrogateComponentIntegrator)
     compInt.time += compInt.component.timestep
 end
 
-function Mermaid.getstate(compInt::SurrogateComponentIntegrator, key)
+function Sirens.getstate(compInt::SurrogateComponentIntegrator, key)
     if first(key.variable) == '#'
         if key.variable == "#time"
             return compInt.time
@@ -82,16 +82,16 @@ function Mermaid.getstate(compInt::SurrogateComponentIntegrator, key)
     return getstate(compInt.integrator, key)
 end
 
-function Mermaid.getstate(compInt::SurrogateComponentIntegrator)
+function Sirens.getstate(compInt::SurrogateComponentIntegrator)
     return compInt.state
 end
 
-function Mermaid.setstate!(compInt::SurrogateComponentIntegrator, state)
+function Sirens.setstate!(compInt::SurrogateComponentIntegrator, state)
     compInt.state = state
 end
 
-function Mermaid.setstate!(compInt::SurrogateComponentIntegrator,
-        key::Mermaid.AbstractConnectedVariable, value)
+function Sirens.setstate!(compInt::SurrogateComponentIntegrator,
+        key::Sirens.AbstractConnectedVariable, value)
     if first(key.variable) == '#'
         if key.variable == "#time"
             compInt.time = value
@@ -103,7 +103,7 @@ function Mermaid.setstate!(compInt::SurrogateComponentIntegrator,
     compInt.state = getstate(compInt.integrator)
 end
 
-function Mermaid.variables(component::SurrogateComponent)
+function Sirens.variables(component::SurrogateComponent)
     return union(variables(component.component), ["#time"])
 end
 

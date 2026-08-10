@@ -50,7 +50,7 @@
         outputs = ["Predator.prey"]
     )
 
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 0.1))
+    mp = SirenProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 0.1))
 
     alg = MinimumTimeStepper()
     solMer = solve(mp, alg)
@@ -68,7 +68,7 @@
         timestep = 0.002,
         state_names = OrderedDict("predator" => 1, "prey" => 2),
     )
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 10.0))
+    mp = SirenProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 10.0))
     solve(mp, alg)
 end
 
@@ -120,7 +120,7 @@ end
         outputs = ["Predator.prey"]
     )
 
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 0.1))
+    mp = SirenProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 0.1))
 
     using CommonSolve
     alg = MinimumTimeStepper()

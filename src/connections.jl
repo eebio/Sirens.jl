@@ -146,7 +146,7 @@ Construct a [Connector](@ref) from string names for inputs and outputs.
 - Inputs are read in the order given by `inputs`.
 - With `func=nothing` and a single input, the input is passed unchanged to every output.
 - With `func=nothing` and multiple inputs, input values are collected into a vector.
-- With a function, Mermaid calls `func(input1, input2, ...)` using positional arguments.
+- With a function, Sirens calls `func(input1, input2, ...)` using positional arguments.
   The function receives input values in order, not a vector.
 - Output values (from `func` or the single input) are set to every output in order.
 
@@ -161,7 +161,7 @@ at a subsequent event.
 # Mapping and Transformations
 The function (`func`) receives positional arguments for each input and must return
 a value compatible with every output:
-- Mermaid performs no automatic unit conversion, interpolation, broadcasting, or reshaping.
+- Sirens performs no automatic unit conversion, interpolation, broadcasting, or reshaping.
 - Spatial mapping between grids, coordinate systems, or resolutions must be explicit in
     `func`.
 - For no-output connectors (side effects), the return value is ignored.
@@ -218,16 +218,16 @@ end
 end
 
 """
-    runconnection(merInt::AbstractMermaidIntegrator, conn::AbstractConnector)
+    runconnection(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
 
 Extract all the input states from `merInt`, apply the connection function, and return the
 output.
 
 # Arguments
-- `merInt::AbstractMermaidIntegrator`: The Mermaid integrator containing the components.
+- `merInt::AbstractSirenIntegrator`: The Sirens integrator containing the components.
 - `conn::AbstractConnector`: The connector defining the connection.
 """
-function runconnection(merInt::AbstractMermaidIntegrator, conn::AbstractConnector)
+function runconnection(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
     # Get the values of the connectors inputs
     inputs = []
     for input in conn.inputs
@@ -248,13 +248,13 @@ function runconnection(merInt::AbstractMermaidIntegrator, conn::AbstractConnecto
 end
 
 """
-    runconnection!(merInt::AbstractMermaidIntegrator, conn::AbstractConnector)
+    runconnection!(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
 
 Extract all input states from `merInt`, apply the connection function, and set output
 states in `merInt`.
 
 # Arguments
-- `merInt::AbstractMermaidIntegrator`: The Mermaid integrator containing components.
+- `merInt::AbstractSirenIntegrator`: The Sirens integrator containing components.
 - `conn::AbstractConnector`: The connector defining inputs, outputs, and transformation.
 
 # Behavior
@@ -262,7 +262,7 @@ states in `merInt`.
 2. Sets each output value in the corresponding component via `setstate!`.
 3. Outputs are set in order; later outputs can depend on earlier ones if they share state.
 """
-function runconnection!(merInt::AbstractMermaidIntegrator, conn::AbstractConnector)
+function runconnection!(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
     outputs = runconnection(merInt, conn)
     # Set the outputs in the corresponding integrators
     for output in conn.outputs
@@ -273,7 +273,7 @@ function runconnection!(merInt::AbstractMermaidIntegrator, conn::AbstractConnect
     return nothing
 end
 
-function checkconnection(conn::AbstractConnector, merInt::AbstractMermaidIntegrator)
+function checkconnection(conn::AbstractConnector, merInt::AbstractSirenIntegrator)
     # Check if all inputs are earlier in time than (or equal to) the time of all outputs
     max_input_time = -Inf
     for input in conn.inputs

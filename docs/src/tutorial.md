@@ -3,7 +3,7 @@
 In this tutorial, we will:
 
 * Create a hybrid simulation between an Agent-based model, defined in Agents.jl, and an ODE system defined through DifferentialEquations.jl.
-* Introduce Mermaid Components for Agents.jl and DifferentialEquations.jl.
+* Introduce Sirens Components for Agents.jl and DifferentialEquations.jl.
 * Demonstrate how these Components can be connected together through Connectors.
 * Solve the hybrid model.
 * Visualise the results of the simulation.
@@ -45,7 +45,7 @@ Next, we want to wrap this ODEProblem inside an DEComponent.
 For this, we will need to define the `state_names` field, and should generally provide a value for the `name` field (since component names in a hybrid simulation should be unique).
 
 ```@example tutorial
-using Mermaid
+using Sirens
 comp1 = DEComponent(prob, Rodas5P();
     name="food", state_names=Dict("x" => 1, "y" => 2),
 )
@@ -136,7 +136,7 @@ We can now set up the connections between the variables in the two components.
 Connector
 ```
 
-The format for specifying a [ConnectedVariable](@ref) is given in [Mermaid Interface](@ref), but in its simplest form, it is a string containing a component name and a variable/state name.
+The format for specifying a [ConnectedVariable](@ref) is given in [Sirens Interface](@ref), but in its simplest form, it is a string containing a component name and a variable/state name.
 
 ```@example tutorial
 conn1 = Connector(inputs=["food.x"], outputs=["birds.x"])
@@ -145,26 +145,26 @@ conn2 = Connector(inputs=["food.y"], outputs=["birds.y"])
 
 ## Solving the hybrid model
 
-To create the hybrid model, we need to create a [MermaidProblem](@ref).
+To create the hybrid model, we need to create a [SirenProblem](@ref).
 We can then solve this using the `CommonSolve` interface.
 
 ```@docs; canonical=false
-MermaidProblem
+SirenProblem
 ```
 
 ```@example tutorial
-mp = MermaidProblem(components=[comp1, comp2], connectors=[conn1, conn2], tspan=tspan)
+mp = SirenProblem(components=[comp1, comp2], connectors=[conn1, conn2], tspan=tspan)
 alg = MinimumTimeStepper()
 sol = solve(mp, alg)
 ```
 
 ## Plotting the solution
 
-After running `solve`, we get `sol`, a [MermaidSolution](@ref) instance.
+After running `solve`, we get `sol`, a [SirenSolution](@ref) instance.
 This stores all variables given in `state_names` at each timepoint.
 
 ```@docs; canonical=false
-MermaidSolution
+SirenSolution
 ```
 
 ```@example tutorial
@@ -210,7 +210,7 @@ conn3 = Connector(
     func = (model) -> plot_input(model)
 )
 
-mp = MermaidProblem(components = [comp1, comp2], connectors = [conn1, conn2, conn3], tspan = tspan)
+mp = SirenProblem(components = [comp1, comp2], connectors = [conn1, conn2, conn3], tspan = tspan)
 sol = solve(mp, alg)
 
 save("birds.mp4", io)

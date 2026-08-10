@@ -1,7 +1,7 @@
 @testitem "JET - Package" begin
     using JET
     if VERSION >= v"1.12" && JET.JET_AVAILABLE
-        test_package(Mermaid; target_modules=(Mermaid,))
+        test_package(Sirens; target_modules=(Sirens,))
     end
 end
 
@@ -74,7 +74,7 @@ end
             outputs=["Schelling.min_to_be_happy"]
         )
 
-        mp = MermaidProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
+        mp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
 
         alg = MinimumTimeStepper()
         intMer = init(mp, alg)
@@ -103,9 +103,9 @@ end
         # Or no instability if you use a full constructor rather than a string constructor with tuples
         @test_opt Connector((ConnectedVariable("ode", "happy", nothing, nothing)), (ConnectedVariable("Schelling", "min_to_be_happy", nothing, nothing)))
 
-        @test_opt MermaidProblem((c1, c2), (conn,), (0.0, 100.0)) broken = true
+        @test_opt SirenProblem((c1, c2), (conn,), (0.0, 100.0)) broken = true
         # But return type is correctly inferred
-        types = Base.return_types(MermaidProblem, (typeof((c1, c2)), typeof((conn,)), typeof((0.0, 100.0))))
+        types = Base.return_types(SirenProblem, (typeof((c1, c2)), typeof((conn,)), typeof((0.0, 100.0))))
         @test isconcretetype(types[1])
 
         # Tuples for save_vars are type stable
@@ -113,7 +113,7 @@ end
         @test_opt init(mp, alg; save_vars=(a, b))
         #=
         The following things are expected/known to be type unstable in solve!:
-        - The creation of a MermaidSolutionData object cannot infer the types of the values at compile time
+        - The creation of a SirenSolutionData object cannot infer the types of the values at compile time
         - Saving variables with deepcopy in update_solution!
         - The return value of getstate (and therefore the input value of setstate! in runconnection!)
         - @assert in step! for floating point comparison of times

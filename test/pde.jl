@@ -92,7 +92,7 @@
         outputs = ["PDE.g[1:9]"]
     )
 
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn], tspan = (0.0, 0.01))
+    mp = SirenProblem(components = [c1, c2], connectors = [conn], tspan = (0.0, 0.01))
     sol = solve(mp, MinimumTimeStepper())
     finalsol = [0, sol(0.01)["PDE.u"]..., 0]
     @test all(isapprox.(finalsol, solPDE[u(t, x)][end, :], atol = 1e-8))

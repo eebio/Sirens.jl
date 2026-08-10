@@ -111,13 +111,13 @@ end
 @testitem "single trixi particles sim" setup = [trixisim] begin
     using TrixiParticles
     using OrdinaryDiffEq
-    using Mermaid
+    using Sirens
 
     comp = TrixiParticlesComponent(semi, RDPK3SpFSAL35(); name = "TrixiParticles Component", timestep = 0.002)
-    mp = MermaidProblem(components = [comp], connectors = [], tspan = tspan)
+    mp = SirenProblem(components = [comp], connectors = [], tspan = tspan)
     alg = MinimumTimeStepper()
-    sol_mermaid = solve(mp, alg; save_vars = ["TrixiParticles Component.#state"])
-    a = [sol_mermaid(i)["TrixiParticles Component.#state"] for i in 0:0.1:tspan[2]]
+    sol_siren = solve(mp, alg; save_vars = ["TrixiParticles Component.#state"])
+    a = [sol_siren(i)["TrixiParticles Component.#state"] for i in 0:0.1:tspan[2]]
     b = [sol_trixi(i) for i in 0:0.1:tspan[2]]
     @test a ≈ b
 end
@@ -127,7 +127,7 @@ end
     using OrdinaryDiffEq
     using OrdinaryDiffEqLowOrderRK
     using OrdinaryDiffEqLowStorageRK
-    using Mermaid
+    using Sirens
 
     comp = TrixiParticlesComponent(semi, RDPK3SpFSAL35(); name = "TrixiParticles Component", timestep = 0.002)
 
@@ -157,9 +157,9 @@ end
         func = pressure_interpolation
     )
 
-    mp = MermaidProblem(components = [comp, comp2], connectors = [conn], tspan = tspan)
+    mp = SirenProblem(components = [comp, comp2], connectors = [conn], tspan = tspan)
     alg = MinimumTimeStepper()
-    sol_mermaid = solve(mp, alg; save_vars = ["TrixiParticles Component.#state"])
+    sol_siren = solve(mp, alg; save_vars = ["TrixiParticles Component.#state"])
 
     int = init(mp, alg)
     @test getstate(int, ConnectedVariable("ODE.pressure")) == 0.0

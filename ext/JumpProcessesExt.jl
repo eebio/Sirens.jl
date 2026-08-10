@@ -1,6 +1,6 @@
 module JumpProcessesExt
 
-using Mermaid
+using Sirens
 using CommonSolve
 using DiffEqBase
 using JumpProcesses
@@ -11,7 +11,7 @@ using OrderedCollections: OrderedDict
                 name::String="Jump", timestep::Float64=1.0, intkwargs::NamedTuple=(;),
                 state_names::Dict{String,Any}=Dict{String,Any}())
 
-A Mermaid component that wraps a JumpProcesses.jl jump process problem.
+A Sirens component that wraps a JumpProcesses.jl jump process problem.
 
 # Arguments
 - `model::JumpProblem`: SciML Jump problem containing a continuous ODE and jump events.
@@ -30,19 +30,19 @@ A Mermaid component that wraps a JumpProcesses.jl jump process problem.
 - `#state`: The full state vector (`integrator.u`).
 - `#integrator`: The underlying DifferentialEquations.jl integrator object.
 """
-function Mermaid.JumpComponent(model::JumpProblem,
+function Sirens.JumpComponent(model::JumpProblem,
         alg; name = "Jump", timestep::Real = 1.0, intkwargs = (;),
         state_names = Dict{String, Any}())
-    return Mermaid.JumpComponent(model, name, state_names, timestep, alg, intkwargs)
+    return Sirens.JumpComponent(model, name, state_names, timestep, alg, intkwargs)
 end
 
-function CommonSolve.init(c::Mermaid.JumpComponent)
-    integrator = Mermaid.JumpComponentIntegrator(
+function CommonSolve.init(c::Sirens.JumpComponent)
+    integrator = Sirens.JumpComponentIntegrator(
         init(c.model, c.alg; c.intkwargs...), c)
     return integrator
 end
 
-function CommonSolve.step!(compInt::Mermaid.JumpComponentIntegrator)
+function CommonSolve.step!(compInt::Sirens.JumpComponentIntegrator)
     # Doing reset here rather than setstate! ensures we only reset at the last possible time
     if compInt.integrator.derivative_discontinuity
         reset_aggregated_jumps!(compInt.integrator)
@@ -50,7 +50,7 @@ function CommonSolve.step!(compInt::Mermaid.JumpComponentIntegrator)
     CommonSolve.step!(compInt.integrator, timestep(compInt), true)
 end
 
-function Mermaid.getstate(compInt::Mermaid.JumpComponentIntegrator, key)
+function Sirens.getstate(compInt::Sirens.JumpComponentIntegrator, key)
     if first(key.variable) == '#'
         if key.variable == "#time"
             return compInt.integrator.t
@@ -64,11 +64,11 @@ function Mermaid.getstate(compInt::Mermaid.JumpComponentIntegrator, key)
     return compInt.integrator[index]
 end
 
-function Mermaid.getstate(compInt::Mermaid.JumpComponentIntegrator)
+function Sirens.getstate(compInt::Sirens.JumpComponentIntegrator)
     return compInt.integrator.u
 end
 
-function Mermaid.setstate!(compInt::Mermaid.JumpComponentIntegrator, key, value)
+function Sirens.setstate!(compInt::Sirens.JumpComponentIntegrator, key, value)
     derivative_discontinuity!(compInt.integrator, true)
     # Clear jump caches too
     if first(key.variable) == '#'
@@ -87,12 +87,12 @@ function Mermaid.setstate!(compInt::Mermaid.JumpComponentIntegrator, key, value)
     compInt.integrator[index] = value
 end
 
-function Mermaid.setstate!(compInt::Mermaid.JumpComponentIntegrator, value)
+function Sirens.setstate!(compInt::Sirens.JumpComponentIntegrator, value)
     derivative_discontinuity!(compInt.integrator, true)
     compInt.integrator.u = value
 end
 
-function Mermaid.variables(component::Mermaid.JumpComponent)
+function Sirens.variables(component::Sirens.JumpComponent)
     return union(keys(component.state_names), ["#time", "#integrator", "#state"])
 end
 

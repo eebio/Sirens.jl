@@ -1,5 +1,5 @@
 @testsnippet interface1 begin
-    using Mermaid
+    using Sirens
 
     struct TestComponent <: AbstractComponent
         timestep::Float64
@@ -20,18 +20,18 @@
         compInt.state += compInt.component.timestep
     end
 
-    function Mermaid.getstate(compInt::TestIntegrator, key)
+    function Sirens.getstate(compInt::TestIntegrator, key)
         if key.variable == "#time"
             return compInt.state
         end
         return compInt.state
     end
 
-    function Mermaid.getstate(compInt::TestIntegrator)
+    function Sirens.getstate(compInt::TestIntegrator)
         return compInt.state
     end
 
-    function Mermaid.setstate!(compInt::TestIntegrator, key, value)
+    function Sirens.setstate!(compInt::TestIntegrator, key, value)
         if first(key.variable) == '#'
             if key.variable == "#time"
                 compInt.state = value
@@ -41,11 +41,11 @@
         compInt.state = value
     end
 
-    function Mermaid.setstate!(compInt::TestIntegrator, value)
+    function Sirens.setstate!(compInt::TestIntegrator, value)
         compInt.state = value
     end
 
-    function Mermaid.variables(component::TestComponent)
+    function Sirens.variables(component::TestComponent)
         return ["#time"]
     end
 end
@@ -67,7 +67,7 @@ end
 end
 
 @testsnippet interface2 begin
-    using Mermaid
+    using Sirens
 
     struct TestComponent2 <: AbstractComponent
         timestep_new_name::Float64
@@ -88,18 +88,18 @@ end
         compInt.state += compInt.component_new_name.timestep_new_name
     end
 
-    function Mermaid.getstate(compInt::TestIntegrator2, key)
+    function Sirens.getstate(compInt::TestIntegrator2, key)
         if key.variable == "#time"
             return compInt.state
         end
         return compInt.state
     end
 
-    function Mermaid.getstate(compInt::TestIntegrator2)
+    function Sirens.getstate(compInt::TestIntegrator2)
         return compInt.state
     end
 
-    function Mermaid.setstate!(compInt::TestIntegrator2, key, value)
+    function Sirens.setstate!(compInt::TestIntegrator2, key, value)
         if first(key.variable) == '#'
             if key.variable == "#time"
                 compInt.state = value
@@ -109,19 +109,19 @@ end
         compInt.state = value
     end
 
-    function Mermaid.setstate!(compInt::TestIntegrator2, value)
+    function Sirens.setstate!(compInt::TestIntegrator2, value)
         compInt.state = value
     end
 
-    function Mermaid.variables(component::Union{TestComponent2, TestIntegrator2})
+    function Sirens.variables(component::Union{TestComponent2, TestIntegrator2})
         return ["#time"]
     end
 
-    function Mermaid.name(component::Union{TestComponent2, TestIntegrator2})
+    function Sirens.name(component::Union{TestComponent2, TestIntegrator2})
         return "Test Component"
     end
 
-    function Mermaid.timestep(component::Union{TestComponent2, TestIntegrator2})
+    function Sirens.timestep(component::Union{TestComponent2, TestIntegrator2})
         return 0.1
     end
 end

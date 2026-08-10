@@ -51,7 +51,7 @@ Duplicate an existing component into a [DuplicatedComponent](@ref).
 - `#init_states`: Initial states used when an ID is first created.
 
 # ID Semantics
-When `#ids` is set via a connector, Mermaid compares it against the previous value:
+When `#ids` is set via a connector, Sirens compares it against the previous value:
 - Existing IDs retain their states.
 - Missing IDs are removed.
 - New IDs receive a copy of the matching `#init_states` entry or `default_state`.

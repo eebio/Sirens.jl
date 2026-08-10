@@ -1,4 +1,4 @@
-using Mermaid
+using Sirens
 using OrdinaryDiffEq
 using StochasticDiffEq
 using SymbolicIndexingInterface
@@ -198,7 +198,7 @@ function plot_input(model)
     @show nagents(model)
 end
 
-function set_initial_states!(states, ids, model) # Do mutating functions work in Mermaid connectors?
+function set_initial_states!(states, ids, model)
     # init_states is returned, states is mutated
     init_states = Dict{Int, Vector{Float64}}()
     for id in allids(model)
@@ -280,7 +280,7 @@ conn_nut_import_rate_space = Connector(
 )
 
 if use_improved
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [dup_g, dup_i, abm, pde], # TODO get awkward error when repressilator is run before growth
         connectors = [
             conn_init_states_rep, conn_init_states_growth, conn_ids_1, conn_ids_2, conn_gfp,
@@ -289,7 +289,7 @@ if use_improved
         tspan = (0, max_t)
     )
 else
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [dup_g, dup_r, abm, pde], # TODO get awkward error when repressilator is run before growth
         connectors = [
             conn_init_states_rep, conn_init_states_growth, conn_ids_1, conn_ids_2, conn_gfp,

@@ -1,16 +1,16 @@
-struct MermaidSolutionData{K<:Tuple,V<:Tuple} <: AbstractDict{AbstractConnectedVariable,Any}
+struct SirenSolutionData{K<:Tuple,V<:Tuple} <: AbstractDict{AbstractConnectedVariable,Any}
     keys::K
     values::V
 end
 
 """
-    MermaidSolution{X, Y<:MermaidSolutionData} <: AbstractMermaidSolution
+    SirenSolution{X, Y<:SirenSolutionData} <: AbstractSirenSolution
 
-Stores the solution of a [MermaidProblem](@ref) over time.
+Stores the solution of a [SirenProblem](@ref) over time.
 
 # Fields
 - `t::X`: Time points at which the solution is saved.
-- `u::Y<:MermaidSolutionData`: A dictionary-like structure storing the saved states for each
+- `u::Y<:SirenSolutionData`: A dictionary-like structure storing the saved states for each
     variable in the problem.
 
 # Interpolation
@@ -18,10 +18,10 @@ Stores the solution of a [MermaidProblem](@ref) over time.
 A solution can be interpolated at arbitrary times using callable syntax:
 
 ```julia
-(sol::AbstractMermaidSolution)(t::Real)
+(sol::AbstractSirenSolution)(t::Real)
 ```
 
-This returns a new `MermaidSolution` with interpolated states at time `t`.
+This returns a new `SirenSolution` with interpolated states at time `t`.
 
 **Interpolation Rules:**
 - For numeric states and numeric arrays: Uses linear interpolation between saved time points.
@@ -36,41 +36,41 @@ The time `t` must be within `[sol.t[1], sol.t[end]]`, otherwise a `BoundsError` 
 sol(2.5)  # Interpolate solution at time t=2.5
 ```
 """
-struct MermaidSolution{X, Y <: MermaidSolutionData} <: AbstractMermaidSolution
+struct SirenSolution{X, Y <: SirenSolutionData} <: AbstractSirenSolution
     t::X
     u::Y
 end
 
 """
-    MermaidSolution(int::MermaidIntegrator) <: AbstractMermaidSolution
+    SirenSolution(int::SirenIntegrator) <: AbstractSirenSolution
 
-Create a [MermaidSolution](@ref) object initialized for the `save_vars`/variables in the
-    given MermaidIntegrator.
+Create a [SirenSolution](@ref) object initialized for the `save_vars`/variables in the
+    given SirenIntegrator.
 
 # Arguments
-- `int::MermaidIntegrator`: The integrator to extract solution structure from.
+- `int::SirenIntegrator`: The integrator to extract solution structure from.
 
 # Returns
-- `MermaidSolution`: A new [MermaidSolution](@ref) object with empty time and state arrays
+- `SirenSolution`: A new [SirenSolution](@ref) object with empty time and state arrays
     for each variable to be saved.
 """
-function MermaidSolution(int::AbstractMermaidIntegrator)
-    u = MermaidSolutionData(int)
-    return MermaidSolution(Vector{typeof(int.currtime)}(), u)
+function SirenSolution(int::AbstractSirenIntegrator)
+    u = SirenSolutionData(int)
+    return SirenSolution(Vector{typeof(int.currtime)}(), u)
 end
 
 """
-    update_solution!(sol::MermaidSolution, merInt::MermaidIntegrator)
+    update_solution!(sol::SirenSolution, merInt::SirenIntegrator)
 
-Update the [MermaidSolution](@ref) `sol` with the current time and state from the
-    MermaidIntegrator.
+Update the [SirenSolution](@ref) `sol` with the current time and state from the
+    SirenIntegrator.
 
 # Arguments
-- `sol::MermaidSolution`: The [MermaidSolution](@ref) to be updated.
-- `merInt::MermaidIntegrator`: The integrator object providing the current time (`currtime`)
+- `sol::SirenSolution`: The [SirenSolution](@ref) to be updated.
+- `merInt::SirenIntegrator`: The integrator object providing the current time (`currtime`)
     and states to access via `getstate`.
 """
-function update_solution!(sol::AbstractMermaidSolution, merInt::AbstractMermaidIntegrator)
+function update_solution!(sol::AbstractSirenSolution, merInt::AbstractSirenIntegrator)
     push!(sol.t, merInt.currtime)
     _push_states!(sol.u.values, sol.u.keys, merInt)
     return sol
@@ -84,22 +84,22 @@ end
 end
 
 """
-    Base.getindex(sol::AbstractMermaidSolution, var::AbstractString)
-    Base.getindex(sol::AbstractMermaidSolution, var::AbstractConnectedVariable)
-    Base.getindex(sol::AbstractMermaidSolution, index::Int)
+    Base.getindex(sol::AbstractSirenSolution, var::AbstractString)
+    Base.getindex(sol::AbstractSirenSolution, var::AbstractConnectedVariable)
+    Base.getindex(sol::AbstractSirenSolution, index::Int)
 
 Get the solution for a variable `var` or at a time index `index` from a
-    [MermaidSolution](@ref).
+    [SirenSolution](@ref).
 
 # Arguments
-- `sol::AbstractMermaidSolution`: The solution object.
+- `sol::AbstractSirenSolution`: The solution object.
 - `var::Union{AbstractString, AbstractConnectedVariable}`: The variable name, optionally
     with indices like `\"comp.var[1:3]\"` or `\"comp[2].var[4]\"`.
 - `index::Int`: The time index (1-based) into the saved times.
 
 # Returns
 - If `var` is provided, returns a vector of saved states for that variable across all times.
-- If `index` is provided, returns a new [MermaidSolution](@ref) containing only the data
+- If `index` is provided, returns a new [SirenSolution](@ref) containing only the data
     at that time index for each variable.
 
 # Examples
@@ -109,12 +109,12 @@ sol[ConnectedVariable(\"comp[1].var\")]  # States for duplicated instance 1
 sol[3]                 # Solution data at the 3rd saved time point
 ```
 """
-function Base.getindex(sol::AbstractMermaidSolution, var::AbstractString)
+function Base.getindex(sol::AbstractSirenSolution, var::AbstractString)
     var = ConnectedVariable(var)
     return Base.getindex(sol, var)
 end
 
-function Base.getindex(sol::AbstractMermaidSolution, var::AbstractConnectedVariable)
+function Base.getindex(sol::AbstractSirenSolution, var::AbstractConnectedVariable)
     if haskey(sol.u, var)
         return sol.u[var]
     else
@@ -144,25 +144,25 @@ function Base.getindex(sol::AbstractMermaidSolution, var::AbstractConnectedVaria
     throw(KeyError(var))
 end
 
-function Base.getindex(sol::AbstractMermaidSolution, index::Integer)
+function Base.getindex(sol::AbstractSirenSolution, index::Integer)
     if index < 1 || index > length(sol.t)
         throw(BoundsError(sol.t, index))
     end
-    data = MermaidSolutionData(sol.u.keys, map(v -> v[index], sol.u.values))
-    return MermaidSolution(sol.t[[index]], data)
+    data = SirenSolutionData(sol.u.keys, map(v -> v[index], sol.u.values))
+    return SirenSolution(sol.t[[index]], data)
 end
 
 """
-    (sol::AbstractMermaidSolution)(t::Real)
+    (sol::AbstractSirenSolution)(t::Real)
 
 Interpolate the solution at a given time `t` using linear interpolation where possible.
 
 # Arguments
-- `sol::AbstractMermaidSolution`: The solution object containing time points and state histories.
+- `sol::AbstractSirenSolution`: The solution object containing time points and state histories.
 - `t::Real`: The time at which to interpolate the solution. Must be within `[sol.t[1], sol.t[end]]`.
 
 # Returns
-- `AbstractMermaidSolution`: A new [MermaidSolution](@ref) object containing the interpolated state at time `t`.
+- `AbstractSirenSolution`: A new [SirenSolution](@ref) object containing the interpolated state at time `t`.
 
 # Interpolation Rules
 - For numeric states and numeric arrays: Uses linear interpolation between saved time points.
@@ -174,7 +174,7 @@ Interpolate the solution at a given time `t` using linear interpolation where po
 sol(2.5)  # Interpolate solution at time t=2.5
 ```
 """
-function (sol::AbstractMermaidSolution)(t::Real)
+function (sol::AbstractSirenSolution)(t::Real)
     if t < sol.t[1] || t > sol.t[end]
         throw(BoundsError(
             "Time $t is out of bounds for the solution range " *
@@ -197,8 +197,8 @@ function (sol::AbstractMermaidSolution)(t::Real)
         return sol[lb]
     end
     change = (t - sol.t[lb]) / (sol.t[ub] - sol.t[lb])
-    data = MermaidSolutionData(sol.u.keys, map(v -> interpolate_state(v[lb], v[ub], change), sol.u.values))
-    return MermaidSolution([t], data)
+    data = SirenSolutionData(sol.u.keys, map(v -> interpolate_state(v[lb], v[ub], change), sol.u.values))
+    return SirenSolution([t], data)
 end
 
 function state_type(merInt, cv)
@@ -206,28 +206,28 @@ function state_type(merInt, cv)
     return typeof(state)
 end
 
-function MermaidSolutionData(merInt::AbstractMermaidIntegrator)
+function SirenSolutionData(merInt::AbstractSirenIntegrator)
     keys = Tuple(merInt.save_vars)
     values = Tuple(Vector{state_type(merInt, key)}() for key in keys)
-    return MermaidSolutionData(keys, values)
+    return SirenSolutionData(keys, values)
 end
 
-function Base.length(sol::MermaidSolutionData)
+function Base.length(sol::SirenSolutionData)
     return length(sol.keys)
 end
 
-function Base.iterate(sol::MermaidSolutionData, state=1)
+function Base.iterate(sol::SirenSolutionData, state=1)
     if state > length(sol)
         return nothing
     end
     return (sol.keys[state], sol.values[state]), state + 1
 end
 
-function Base.haskey(sol::MermaidSolutionData, key)
+function Base.haskey(sol::SirenSolutionData, key)
     return key in sol.keys
 end
 
-function Base.get(sol::MermaidSolutionData, key, default)
+function Base.get(sol::SirenSolutionData, key, default)
     idx = findfirst(isequal(key), sol.keys)
     if isnothing(idx)
         return default

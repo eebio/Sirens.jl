@@ -5,9 +5,9 @@ using CommonSolve
 # dispatch to the correct component interface methods.
 
 """
-    MinimumTimeStepper() <: AbstractMermaidSolver
+    MinimumTimeStepper() <: AbstractSirenSolver
 
-A solver that advances the Mermaid integrator by stepping to the next event.
+A solver that advances the [SirenIntegrator](@ref) by stepping to the next event.
 
 # Algorithm
 The minimum stepper chooses the smallest upcoming value of `(local_time + timestep) * timescale`
@@ -31,7 +31,7 @@ components.
 
 See also [Connector](@ref).
 """
-struct MinimumTimeStepper <: AbstractMermaidSolver
+struct MinimumTimeStepper <: AbstractSirenSolver
 end
 
 @inline _min_next_time(::Tuple{}, timescales::Vector{Float64}, i::Int, min_t) = min_t
@@ -42,8 +42,8 @@ end
     return _min_next_time(Base.tail(integrators), timescales, i + 1, min_t)
 end
 
-@inline _apply_connectors!(::Tuple{}, merInt::AbstractMermaidIntegrator) = nothing
-@inline function _apply_connectors!(connectors::Tuple, merInt::AbstractMermaidIntegrator)
+@inline _apply_connectors!(::Tuple{}, merInt::AbstractSirenIntegrator) = nothing
+@inline function _apply_connectors!(connectors::Tuple, merInt::AbstractSirenIntegrator)
     conn = first(connectors)
     if isexecutable(conn) && checkconnection(conn, merInt)
         runconnection!(merInt, conn)
@@ -51,7 +51,7 @@ end
     return _apply_connectors!(Base.tail(connectors), merInt)
 end
 
-function CommonSolve.step!(merInt::MermaidIntegrator, ::MinimumTimeStepper)
+function CommonSolve.step!(merInt::SirenIntegrator, ::MinimumTimeStepper)
     # Update the current time
     min_t = _min_next_time(merInt.integrators, merInt.timescales, 1, Inf)
     # Stop early if the user requested to save somewhere

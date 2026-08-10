@@ -1,6 +1,6 @@
 module MethodOfLinesExt
 
-using Mermaid
+using Sirens
 using CommonSolve
 using OrderedCollections: OrderedDict
 using DiffEqBase
@@ -10,7 +10,7 @@ using DiffEqBase
                  name::String="MOL", timestep::Real=1.0, intkwargs::NamedTuple=(;),
                  state_names::Dict{String,Any}=Dict{String,Any}())
 
-A Mermaid component that wraps a Method of Lines discretized PDE as a SciML
+A Sirens component that wraps a Method of Lines discretized PDE as a SciML
     DifferentialEquations problem.
 
 # Arguments
@@ -38,10 +38,10 @@ MOLComponent is useful for connecting discretized PDEs to other models. When map
 between different spatial grids or resolutions (e.g., PDE grid to agent positions),
 use a connector function to perform interpolation or other spatial transformations.
 """
-function Mermaid.MOLComponent(model::DiffEqBase.AbstractDEProblem,
+function Sirens.MOLComponent(model::DiffEqBase.AbstractDEProblem,
         alg::DiffEqBase.AbstractDEAlgorithm; name = "MOL",
         timestep::Real = 1.0, intkwargs = (;), state_names = Dict{String, Any}())
-    return Mermaid.MOLComponent(model, name, state_names, timestep, alg, intkwargs)
+    return Sirens.MOLComponent(model, name, state_names, timestep, alg, intkwargs)
 end
 
 function CommonSolve.init(c::MOLComponent)
@@ -54,7 +54,7 @@ function CommonSolve.step!(compInt::MOLComponentIntegrator)
     CommonSolve.step!(compInt.integrator, timestep(compInt), true)
 end
 
-function Mermaid.getstate(compInt::MOLComponentIntegrator, key)
+function Sirens.getstate(compInt::MOLComponentIntegrator, key)
     if first(key.variable) == '#'
         if key.variable == "#time"
             return compInt.integrator.t
@@ -74,12 +74,12 @@ function Mermaid.getstate(compInt::MOLComponentIntegrator, key)
     end
 end
 
-function Mermaid.getstate(compInt::MOLComponentIntegrator)
+function Sirens.getstate(compInt::MOLComponentIntegrator)
     # Return the full state vector
     return compInt.integrator.u
 end
 
-function Mermaid.setstate!(compInt::MOLComponentIntegrator, key, value)
+function Sirens.setstate!(compInt::MOLComponentIntegrator, key, value)
     derivative_discontinuity!(compInt.integrator, true)
     if first(key.variable) == '#'
         if key.variable == "#time"
@@ -111,12 +111,12 @@ function Mermaid.setstate!(compInt::MOLComponentIntegrator, key, value)
     end
 end
 
-function Mermaid.setstate!(compInt::MOLComponentIntegrator, value)
+function Sirens.setstate!(compInt::MOLComponentIntegrator, value)
     # Set the full state vector
     compInt.integrator.u = value
 end
 
-function Mermaid.variables(component::MOLComponent)
+function Sirens.variables(component::MOLComponent)
     return union(keys(component.state_names), ["#time", "#integrator", "#state"])
 end
 

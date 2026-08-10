@@ -1,15 +1,15 @@
 using CommonSolve
 
 """
-    MermaidProblem <: AbstractMermaidProblem
-    MermaidProblem(components, connectors, tspan, timescales=ones(length(components)))
-    MermaidProblem(;
+    SirenProblem <: AbstractSirenProblem
+    SirenProblem(components, connectors, tspan, timescales=ones(length(components)))
+    SirenProblem(;
         components::Union{Tuple, Vector},
         connectors::Union{Tuple, Vector},
         tspan::Tuple{Float64, Float64},
         timescales::Vector{Float64}=ones(length(components)))
 
-Defines a Mermaid hybrid simulation problem.
+Defines a Sirens hybrid simulation problem.
 
 # Arguments
 - `components::Union{Tuple, Vector}`: Tuple or Vector of [Components](@ref AbstractComponent). Order is significant
@@ -33,13 +33,13 @@ Defines a Mermaid hybrid simulation problem.
     particularly important for setting `#ids` and `#init_states` in a
     [DuplicatedComponent](@ref).
 """
-struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
+struct SirenProblem{C<:Tuple,CC<:Tuple} <: AbstractSirenProblem
     components::C
     connectors::CC
     tspan::NTuple{2,Float64}
     timescales::Vector{Float64}
 
-    function MermaidProblem(components, connectors, tspan, timescales)
+    function SirenProblem(components, connectors, tspan, timescales)
 
         # Handle types
         # Components and connectors should be tuples for type stability
@@ -69,31 +69,31 @@ struct MermaidProblem{C<:Tuple,CC<:Tuple} <: AbstractMermaidProblem
     end
 end
 
-function MermaidProblem(; components, connectors, tspan, timescales=ones(length(components)))
-    return MermaidProblem(components, connectors, tspan, timescales)
+function SirenProblem(; components, connectors, tspan, timescales=ones(length(components)))
+    return SirenProblem(components, connectors, tspan, timescales)
 end
 
-function MermaidProblem(components, connectors, tspan)
-    return MermaidProblem(components, connectors, tspan, ones(length(components)))
+function SirenProblem(components, connectors, tspan)
+    return SirenProblem(components, connectors, tspan, ones(length(components)))
 end
 
 """
-    MermaidIntegrator <: AbstractMermaidIntegrator
-    MermaidIntegrator(;
+    SirenIntegrator <: AbstractSirenIntegrator
+    SirenIntegrator(;
         integrators::Tuple,
         connectors::Tuple,
         tspan::Tuple{Float64, Float64},
         currtime::Float64,
-        alg::AbstractMermaidSolver,
+        alg::AbstractSirenSolver,
         save_vars::Vector{<:Union{ConnectedVariable,AbstractString}},
         saveat::Union{Function, AbstractVector},
         timescales::Vector{Float64})
 
-Created using `init(prob::MermaidProblem, alg::AbstractMermaidSolver; save_vars=[])`. All fields are considered internal.
+Created using `init(prob::SirenProblem, alg::AbstractSirenSolver; save_vars=[])`. All fields are considered internal.
 """
-mutable struct MermaidIntegrator{
-    I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,SV<:Tuple,S<:Union{Function,AbstractVector}} <:
-               AbstractMermaidIntegrator
+mutable struct SirenIntegrator{
+    I<:Tuple,CC<:Tuple,X<:AbstractSirenSolver,SV<:Tuple,S<:Union{Function,AbstractVector}} <:
+               AbstractSirenIntegrator
     integrators::I
     connectors::CC
     tspan::Tuple{Float64, Float64}
@@ -103,20 +103,20 @@ mutable struct MermaidIntegrator{
     saveat::S
     timescales::Vector{Float64}
 
-    function MermaidIntegrator(integrators::I, connectors::CC, tspan::Tuple{Float64, Float64}, currtime::Float64, alg::X, save_vars::SV, saveat::S, timescales::Vector{<:Real}) where {I<:Tuple,CC<:Tuple,X<:AbstractMermaidSolver,SV<:Tuple,S<:Union{Function,AbstractVector}}
+    function SirenIntegrator(integrators::I, connectors::CC, tspan::Tuple{Float64, Float64}, currtime::Float64, alg::X, save_vars::SV, saveat::S, timescales::Vector{<:Real}) where {I<:Tuple,CC<:Tuple,X<:AbstractSirenSolver,SV<:Tuple,S<:Union{Function,AbstractVector}}
         return new{I,CC,X,SV,S}(integrators, connectors, tspan, currtime, alg, save_vars, saveat, timescales)
     end
 end
 
 """
-    init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolver;
+    init(prob::AbstractSirenProblem, alg::AbstractSirenSolver;
     save_vars = nothing, saveat = nothing)
 
-Defines the integrator for a Mermaid hybrid simulation.
+Defines the integrator for a Sirens hybrid simulation.
 
 # Arguments
-- `prob::AbstractMermaidProblem`: The problem to be solved.
-- `alg::AbstractMermaidSolver`: The Mermaid solver algorithm to be used.
+- `prob::AbstractSirenProblem`: The problem to be solved.
+- `alg::AbstractSirenSolver`: The Sirens solver algorithm to be used.
 - `save_vars`: Variables to be saved during the simulation. Options include:
     - `nothing` (default): Save all non-special variables (those not starting with '#').
     - `:all`: Save all variables, including special variables.
@@ -125,15 +125,15 @@ Defines the integrator for a Mermaid hybrid simulation.
       indices like `"forest.life[1]"` or `"tree[1:10].life"`.
     - `Tuple{Vararg{ConnectedVariable}}`: A tuple of [ConnectedVariable](@ref) objects to save.
 - `saveat`: When to save the variables during the simulation. Options include:
-    - `nothing` (default): Save after initialization and after every Mermaid event.
+    - `nothing` (default): Save after initialization and after every Sirens syncronisation event.
     - A number `Δt`: Save at times `tspan[1]:Δt:tspan[2]`.
     - A vector of times: Save at exactly these time points.
     - A function `(integrator, t) -> Bool`: Save when it returns true (checked at scheduled stops).
 
 # Returns
-- `MermaidIntegrator`: A mutable integrator ready for solving.
+- `SirenIntegrator`: A mutable integrator ready for solving.
 """
-function CommonSolve.init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolver;
+function CommonSolve.init(prob::AbstractSirenProblem, alg::AbstractSirenSolver;
         save_vars = nothing, saveat = nothing)
     # Initialize the solver
     integrators = map(c -> something(init(c)), prob.components)
@@ -160,34 +160,34 @@ function CommonSolve.init(prob::AbstractMermaidProblem, alg::AbstractMermaidSolv
         saveat = prob.tspan[1]:saveat:prob.tspan[2]
     end
 
-    return MermaidIntegrator(
+    return SirenIntegrator(
         integrators, prob.connectors, prob.tspan, 0.0, alg, save_vars, saveat, prob.timescales)
 end
 
 """
-    step!(int::AbstractMermaidIntegrator)
+    step!(int::AbstractSirenIntegrator)
 
 Advance the state of the integrator `int` by one time step.
 
 # Arguments
-- `int::Union{AbstractMermaidIntegrator, AbstractComponentIntegrator}`: The integrator to
+- `int::Union{AbstractSirenIntegrator, AbstractComponentIntegrator}`: The integrator to
     advance.
 """
-function CommonSolve.step!(merInt::AbstractMermaidIntegrator)
+function CommonSolve.step!(merInt::AbstractSirenIntegrator)
     step!(merInt, merInt.alg)
 end
 
 """
-    solve!(merInt::AbstractMermaidIntegrator)
+    solve!(merInt::AbstractSirenIntegrator)
 
-Solves the problem using the MermaidIntegrator by advancing it until the end of the
+Solves the problem using the SirenIntegrator by advancing it until the end of the
 time span, recording solutions according to the `saveat` configuration.
 
 # Arguments
-- `merInt::AbstractMermaidIntegrator`: The integrator to be solved.
+- `merInt::AbstractSirenIntegrator`: The integrator to be solved.
 
 # Returns
-- `MermaidSolution`: The [solution](@ref MermaidSolution) of the problem, containing
+- `SirenSolution`: The [solution](@ref SirenSolution) of the problem, containing
   saved times and states.
 
 # Behavior
@@ -195,8 +195,8 @@ time span, recording solutions according to the `saveat` configuration.
 - Repeatedly calls `step!(integrator)` until `currtime >= tspan[2]`.
 - Records state after each step if `saveat` is satisfied.
 """
-function CommonSolve.solve!(merInt::AbstractMermaidIntegrator)
-    sol = MermaidSolution(merInt)
+function CommonSolve.solve!(merInt::AbstractSirenIntegrator)
+    sol = SirenSolution(merInt)
     if should_save(merInt, merInt.saveat)
         update_solution!(sol, merInt)
     end
@@ -209,7 +209,7 @@ function CommonSolve.solve!(merInt::AbstractMermaidIntegrator)
     return sol
 end
 
-function should_save(merInt::AbstractMermaidIntegrator, saveat::AbstractVector)
+function should_save(merInt::AbstractSirenIntegrator, saveat::AbstractVector)
     if merInt.currtime in saveat
         return true
     else
@@ -217,11 +217,11 @@ function should_save(merInt::AbstractMermaidIntegrator, saveat::AbstractVector)
     end
 end
 
-function should_save(merInt::AbstractMermaidIntegrator, saveat::Function)
+function should_save(merInt::AbstractSirenIntegrator, saveat::Function)
     return saveat(merInt, merInt.currtime)
 end
 
-function getstate(merInt::AbstractMermaidIntegrator, key::AbstractConnectedVariable; kwargs...)
+function getstate(merInt::AbstractSirenIntegrator, key::AbstractConnectedVariable; kwargs...)
     return _getstate_by_name(merInt.integrators, key; kwargs...)
 end
 
@@ -234,12 +234,12 @@ end
     return _getstate_by_name(Base.tail(integrators), key; kwargs...)
 end
 
-function gettime(merInt::AbstractMermaidIntegrator)
+function gettime(merInt::AbstractSirenIntegrator)
     # Get the current time of the integrator
     return merInt.currtime
 end
 
-function setstate!(merInt::AbstractMermaidIntegrator, key::AbstractConnectedVariable, value)
+function setstate!(merInt::AbstractSirenIntegrator, key::AbstractConnectedVariable, value)
     _setstate_by_name!(merInt.integrators, key, value)
     return nothing
 end

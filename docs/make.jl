@@ -1,4 +1,4 @@
-using Documenter, Mermaid, CommonSolve
+using Documenter, Sirens, CommonSolve
 using DocumenterInterLinks
 # Load extensions to be documented
 using Agents, OrdinaryDiffEq, MethodOfLines, Surrogates, Flux, TrixiParticles, JumpProcesses
@@ -26,27 +26,27 @@ PAGES = [
         #"examples/spatial_maps.md",
         #"examples/external_components.md",
     ],
-    "Mermaid Interface" => "interface.md",
-    "Is Mermaid right for me?" => "is_mermaid_right_for_me.md",
+    "Sirens Interface" => "interface.md",
+    "Is Sirens right for me?" => "is_sirens_right_for_me.md",
     "FAQ" => "FAQ.md",
     "API" => "API.md"
 ]
 
-modules = [Mermaid,
-    Base.get_extension(Mermaid, :AgentsExt),
-    Base.get_extension(Mermaid, :DiffEqExt),
-    Base.get_extension(Mermaid, :MethodOfLinesExt),
-    Base.get_extension(Mermaid, :SurrogatesExt),
-    Base.get_extension(Mermaid, :TrixiParticlesExt),
-    Base.get_extension(Mermaid, :JumpProcessesExt),
+modules = [Sirens,
+    Base.get_extension(Sirens, :AgentsExt),
+    Base.get_extension(Sirens, :DiffEqExt),
+    Base.get_extension(Sirens, :MethodOfLinesExt),
+    Base.get_extension(Sirens, :SurrogatesExt),
+    Base.get_extension(Sirens, :TrixiParticlesExt),
+    Base.get_extension(Sirens, :JumpProcessesExt),
 ]
 
 format = Documenter.HTML(assets = ["assets/logo.ico"])
 
-makedocs(sitename = "Mermaid.jl", format = format,
-    repo = Remotes.GitHub("eebio", "Mermaid.jl"), modules = modules, checkdocs = :exports,
+makedocs(sitename = "Sirens.jl", format = format,
+    repo = Remotes.GitHub("eebio", "Sirens.jl"), modules = modules, checkdocs = :exports,
     pages = PAGES, plugins = [links])
 
 deploydocs(
-    repo = "github.com/eebio/Mermaid.jl",
+    repo = "github.com/eebio/Sirens.jl",
 )

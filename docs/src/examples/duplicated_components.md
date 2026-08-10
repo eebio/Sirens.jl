@@ -14,7 +14,7 @@ To define a [DuplicatedComponent](@ref), we first need to define the component w
 
 ```@example tutorial
 using OrdinaryDiffEq
-using Mermaid
+using Sirens
 
 function tree!(du, u, p, t)
     heat, life = u
@@ -110,7 +110,7 @@ We can now set up the connections between the variables in the two components.
 Connector
 ```
 
-The format for specifying a [ConnectedVariable](@ref) is given in [Mermaid Interface](@ref), but in short, it is a string containing a component name and a variable/state name. It can also contain optional indices for only accessing part of a variable (given at the end of the ConnectedVariable), or for only accessing some subcomponents, such as for DuplicatedComponents (given at the end of the component name).
+The format for specifying a [ConnectedVariable](@ref) is given in [Sirens Interface](@ref), but in short, it is a string containing a component name and a variable/state name. It can also contain optional indices for only accessing part of a variable (given at the end of the ConnectedVariable), or for only accessing some subcomponents, such as for DuplicatedComponents (given at the end of the component name).
 
 ```@example tutorial
 conn1 = Connector(inputs=["forest.heat[1:640]"], outputs=["tree[1:640].heat"])
@@ -119,26 +119,26 @@ conn2 = Connector(inputs=["tree[1:640].life"], outputs=["forest.life[1:640]"])
 
 ## Solving the hybrid model
 
-To create the hybrid model, we need to create a [MermaidProblem](@ref).
+To create the hybrid model, we need to create a [SirenProblem](@ref).
 We can then solve this using the `CommonSolve` interface.
 
 ```@docs; canonical=false
-MermaidProblem
+SirenProblem
 ```
 
 ```@example tutorial
-mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn1, conn2], tspan=tspan)
+mp = SirenProblem(components=[dup_comp, comp2], connectors=[conn1, conn2], tspan=tspan)
 alg = MinimumTimeStepper()
 sol = solve(mp, alg)
 ```
 
 ## Plotting the solution
 
-After running `solve`, we get `sol`, a [MermaidSolution](@ref) instance.
+After running `solve`, we get `sol`, a [SirenSolution](@ref) instance.
 This stores all variables given in `state_names` at each timepoint.
 
 ```@docs; canonical=false
-MermaidSolution
+SirenSolution
 ```
 
 ```@example tutorial
@@ -182,7 +182,7 @@ conn3 = Connector(
     func=(model) -> plot_input(model)
 )
 
-mp = MermaidProblem(components=[dup_comp, comp2], connectors=[conn1, conn2, conn3], tspan=tspan)
+mp = SirenProblem(components=[dup_comp, comp2], connectors=[conn1, conn2, conn3], tspan=tspan)
 sol = solve(mp, alg)
 
 save("forest_fire.mp4", io)

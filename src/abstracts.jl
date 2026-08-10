@@ -23,22 +23,22 @@ abstract type AbstractComponentIntegrator end
 """
 $(TYPEDEF)
 """
-abstract type AbstractMermaidSolver end
+abstract type AbstractSirenSolver end
 
 """
 $(TYPEDEF)
 """
-abstract type AbstractMermaidIntegrator end
+abstract type AbstractSirenIntegrator end
 
 """
 $(TYPEDEF)
 """
-abstract type AbstractMermaidProblem end
+abstract type AbstractSirenProblem end
 
 """
 $(TYPEDEF)
 """
-abstract type AbstractMermaidSolution end
+abstract type AbstractSirenSolution end
 
 """
 $(TYPEDEF)

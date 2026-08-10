@@ -1,6 +1,6 @@
 module AgentsExt
 
-using Mermaid
+using Sirens
 using CommonSolve
 using Agents
 using OrderedCollections: OrderedDict
@@ -11,7 +11,7 @@ export AgentsComponent
     AgentsComponent(model::StandardABM; name="Agents Component",
                     state_names=Dict{String,Any}(), timestep::Real=1.0)
 
-A Mermaid component that wraps an agent-based model (ABM) using the Agents.jl package.
+A Sirens component that wraps an agent-based model (ABM) using the Agents.jl package.
 
 # Arguments
 - `model::StandardABM`: The agent-based model to be solved.
@@ -46,10 +46,10 @@ comp = AgentsComponent(model;
     state_names=Dict(\"x\" => :pos_x, \"y\" => :pos_y))
 ```
 """
-function Mermaid.AgentsComponent(model::StandardABM;
+function Sirens.AgentsComponent(model::StandardABM;
         name::AbstractString = "Agents", state_names = Dict{String, Any}(),
         timestep::Real = 1)
-    return Mermaid.AgentsComponent(model, name, state_names, timestep)
+    return Sirens.AgentsComponent(model, name, state_names, timestep)
 end
 
 function CommonSolve.init(c::AgentsComponent)
@@ -62,7 +62,7 @@ function CommonSolve.step!(compInt::AgentsComponentIntegrator)
     compInt.time += timestep(compInt)
 end
 
-function Mermaid.getstate(compInt::AgentsComponentIntegrator, key::ConnectedVariable)
+function Sirens.getstate(compInt::AgentsComponentIntegrator, key::ConnectedVariable)
     if first(key.variable) == '#'
         # Special variables
         if key.variable == "#time"
@@ -118,7 +118,7 @@ function Mermaid.getstate(compInt::AgentsComponentIntegrator, key::ConnectedVari
     end
 end
 
-function Mermaid.setstate!(
+function Sirens.setstate!(
         compInt::AgentsComponentIntegrator, key::ConnectedVariable, value)
     # TODO add ids exception? Is there a way to specify the id when creating an agent
     if first(key.variable) == '#'
@@ -187,15 +187,15 @@ function Mermaid.setstate!(
     return nothing
 end
 
-function Mermaid.getstate(compInt::AgentsComponentIntegrator)
+function Sirens.getstate(compInt::AgentsComponentIntegrator)
     return compInt.integrator
 end
 
-function Mermaid.setstate!(compInt::AgentsComponentIntegrator, state::StandardABM)
+function Sirens.setstate!(compInt::AgentsComponentIntegrator, state::StandardABM)
     compInt.integrator = state
 end
 
-function Mermaid.variables(component::AgentsComponent)
+function Sirens.variables(component::AgentsComponent)
     return union(keys(component.state_names), ["#model", "#time", "#ids"])
 end
 end

@@ -7,48 +7,48 @@ Pages = ["API.md"]
 Depth = 2:3
 ```
 
-This page documents the public API and the execution model used by Mermaid.
+This page documents the public API and the execution model used by Sirens.
 The [Tutorial](@ref) is a narrative introduction; this page is a reference for understanding the structure and interfaces.
 
 ## Core concepts
 
-A Mermaid simulation has four layers:
+A Sirens simulation has four layers:
 
 1. A **component** is an immutable description of a model and its configuration.
 2. A **component integrator** is the mutable runtime state created from a component via `init(component)`.
-3. A [`MermaidProblem`](@ref) stores components, connectors, the global time span, and component time scales.
-4. A [`MermaidSolution`](@ref) stores selected variables at selected global times.
+3. A [`SirenProblem`](@ref) stores components, connectors, the global time span, and component time scales.
+4. A [`SirenSolution`](@ref) stores selected variables at selected global times.
 
 The typical workflow is:
 
 ```julia
-prob = MermaidProblem(components=..., connectors=..., tspan=...)
+prob = SirenProblem(components=..., connectors=..., tspan=...)
 sol = solve(prob, alg; save_vars=..., saveat=...)
 ```
 
 The convenience function `solve` is provided by CommonSolve and performs initialization followed by solving.
-For manual stepping, use `init(prob, alg)` to create a `MermaidIntegrator`, then call `step!` repeatedly or `solve!` to run to completion.
+For manual stepping, use `init(prob, alg)` to create a `SirenIntegrator`, then call `step!` repeatedly or `solve!` to run to completion.
 
 ## Problems and algorithms
 
-### `MermaidProblem`
+### `SirenProblem`
 
 ```@docs
-MermaidProblem
+SirenProblem
 ```
 
-### `MermaidIntegrator`
+### `SirenIntegrator`
 
 ```@docs
-MermaidIntegrator
+SirenIntegrator
 ```
 
 ### Initialization and solving
 
 ```@docs
-init(::AbstractMermaidProblem, ::AbstractMermaidSolver)
+init(::AbstractSirenProblem, ::AbstractSirenSolver)
 solve!
-step!(::AbstractMermaidIntegrator)
+step!(::AbstractSirenIntegrator)
 ```
 
 ### Solvers
@@ -78,7 +78,7 @@ runconnection!
 
 ## Timestepping and multirate solving
 
-`MermaidProblem` accepts one `timescales` value per component. For component `i` with timescale $s_i$:
+`SirenProblem` accepts one `timescales` value per component. For component `i` with timescale $s_i$:
 
 $$t_{global,i} = s_i \cdot t_{local,i}$$
 
@@ -93,13 +93,13 @@ See the [`MinimumTimeStepper`](@ref) docstring for details on the stepping algor
 Saving configuration is passed during `init` or `solve`:
 
 ```@docs; canonical=false
-init(::AbstractMermaidProblem, ::AbstractMermaidSolver)
+init(::AbstractSirenProblem, ::AbstractSirenSolver)
 ```
 
-### `MermaidSolution`
+### `SirenSolution`
 
 ```@docs
-MermaidSolution
+SirenSolution
 ```
 
 A solution has `sol.t` (saved global times) and `sol.u` (dictionary mapping variable names to saved states).
@@ -107,10 +107,10 @@ A solution has `sol.t` (saved global times) and `sol.u` (dictionary mapping vari
 #### Solution indexing and interpolation
 
 ```@docs
-Base.getindex(::AbstractMermaidSolution, ::AbstractString)
+Base.getindex(::AbstractSirenSolution, ::AbstractString)
 ```
 
-See the [`MermaidSolution`](@ref) docstring for details on interpolation behavior, including handling of numeric vs. non-numeric states.
+See the [`SirenSolution`](@ref) docstring for details on interpolation behavior, including handling of numeric vs. non-numeric states.
 
 ## Components
 
@@ -181,18 +181,18 @@ AbstractComponent
 AbstractTimeDependentComponent
 AbstractTimeIndependentComponent
 AbstractComponentIntegrator
-AbstractMermaidSolver
-AbstractMermaidIntegrator
-AbstractMermaidProblem
-AbstractMermaidSolution
+AbstractSirenSolver
+AbstractSirenIntegrator
+AbstractSirenProblem
+AbstractSirenSolution
 AbstractConnectedVariable
 AbstractConnector
 ```
 
 ## User-Defined Components
 
-One of the main goals of Mermaid is to make it simple and accessible to expand functionality with user-defined components.
-This is done through the component interface—a set of functions that can be implemented to support all Mermaid functionality.
+One of the main goals of Sirens is to make it simple and accessible to expand functionality with user-defined components.
+This is done through the component interface—a set of functions that can be implemented to support all of Sirens functionality.
 
 ### Core interface functions
 

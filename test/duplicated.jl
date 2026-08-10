@@ -68,7 +68,7 @@
     conn1 = Connector(inputs = ["forest.heat[1:640]"], outputs = ["tree[1:640].heat"])
     conn2 = Connector(inputs = ["tree[1:640].life"], outputs = ["forest.life[1:640]"])
 
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [dup_comp, comp2], connectors = [conn1, conn2], tspan = (0.0, 10.0)
     )
     alg = MinimumTimeStepper()
@@ -129,7 +129,7 @@ end
     conn_val2 = Connector(inputs = ["dummyabm.val2"], outputs = ["decay.val2"])
     conn_val = Connector(inputs = ["decay.val"], outputs = ["dummyabm.val"])
 
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [dup_comp, comp2],
         connectors = [conn_ids, conn_val2, conn_val],
         tspan = (0.0, 5.0)

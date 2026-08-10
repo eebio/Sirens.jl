@@ -8,15 +8,15 @@
     conn3 = Connector(inputs=["comp.z"], outputs=["comp.x"])
 
     using Logging
-    @test_logs min_level=Logging.Warn MermaidProblem(components=[comp1, comp2], connectors=[conn1, conn2, conn3], tspan=(0.0, 1.0))
+    @test_logs min_level=Logging.Warn SirenProblem(components=[comp1, comp2], connectors=[conn1, conn2, conn3], tspan=(0.0, 1.0))
 
     # Add a loop (x -> 2.y -> z -> x)
     conn4 = Connector(inputs=["comp2.y"], outputs=["comp.z"])
-    @test_warn "Algebraic loop" MermaidProblem(components=[comp1, comp2], connectors=[conn1, conn2, conn3, conn4], tspan=(0.0, 1.0))
+    @test_warn "Algebraic loop" SirenProblem(components=[comp1, comp2], connectors=[conn1, conn2, conn3, conn4], tspan=(0.0, 1.0))
 
     # Implicit connectors can create loops
     conn5 = ImplicitConnector(inputs=["comp2.y"], outputs=["comp.z"])
-    @test_warn "Algebraic loop" MermaidProblem(components=[comp1, comp2], connectors=[conn1, conn2, conn3, conn5], tspan=(0.0, 1.0))
+    @test_warn "Algebraic loop" SirenProblem(components=[comp1, comp2], connectors=[conn1, conn2, conn3, conn5], tspan=(0.0, 1.0))
 end
 
 @testitem "implicit connector doesn't change simulation" begin
@@ -52,7 +52,7 @@ end
         outputs=["comp1.y"]
     )
 
-    mp = MermaidProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 1.0))
+    mp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 1.0))
     sol = solve(mp, MinimumTimeStepper())
 
     @test all(sol["comp1.y"] .== 0.5)

@@ -1,6 +1,6 @@
 module TrixiParticlesExt
 
-using Mermaid
+using Sirens
 using CommonSolve
 using TrixiParticles
 using DiffEqBase
@@ -12,7 +12,7 @@ using OrderedCollections: OrderedDict
                 intkwargs::NamedTuple=(;), tspan=(0.0, Inf),
                 state_names::Dict{String,Any}=Dict{String,Any}())
 
-A Mermaid component that wraps a TrixiParticles.jl particle method simulation.
+A Sirens component that wraps a TrixiParticles.jl particle method simulation.
 
 # Arguments
 - `semi::TrixiParticles.Semidiscretization`: TrixiParticles semidiscretization object.
@@ -34,25 +34,25 @@ A Mermaid component that wraps a TrixiParticles.jl particle method simulation.
 - `#integrator`: The underlying DifferentialEquations.jl integrator object.
 - `#semi`: The TrixiParticles semidiscretization object (read-only; cannot be used with `setstate!`).
 """
-function Mermaid.TrixiParticlesComponent(semi::TrixiParticles.Semidiscretization,
+function Sirens.TrixiParticlesComponent(semi::TrixiParticles.Semidiscretization,
         alg; name = "TrixiParticles", timestep::Real = 1.0, intkwargs = (;),
         tspan = (0.0, Inf), state_names = Dict{String, Any}())
     ode = semidiscretize(semi, tspan)
-    return Mermaid.TrixiParticlesComponent(
+    return Sirens.TrixiParticlesComponent(
         ode, semi, name, state_names, timestep, alg, intkwargs)
 end
 
-function CommonSolve.init(c::Mermaid.TrixiParticlesComponent)
-    integrator = Mermaid.TrixiParticlesComponentIntegrator(
+function CommonSolve.init(c::Sirens.TrixiParticlesComponent)
+    integrator = Sirens.TrixiParticlesComponentIntegrator(
         init(c.model, c.alg; c.intkwargs...), c)
     return integrator
 end
 
-function CommonSolve.step!(compInt::Mermaid.TrixiParticlesComponentIntegrator)
+function CommonSolve.step!(compInt::Sirens.TrixiParticlesComponentIntegrator)
     CommonSolve.step!(compInt.integrator, timestep(compInt), true)
 end
 
-function Mermaid.getstate(compInt::Mermaid.TrixiParticlesComponentIntegrator, key)
+function Sirens.getstate(compInt::Sirens.TrixiParticlesComponentIntegrator, key)
     if first(key.variable) == '#'
         if key.variable == "#time"
             return compInt.integrator.t
@@ -68,11 +68,11 @@ function Mermaid.getstate(compInt::Mermaid.TrixiParticlesComponentIntegrator, ke
     return compInt.integrator[index]
 end
 
-function Mermaid.getstate(compInt::Mermaid.TrixiParticlesComponentIntegrator)
+function Sirens.getstate(compInt::Sirens.TrixiParticlesComponentIntegrator)
     return compInt.integrator.u
 end
 
-function Mermaid.setstate!(compInt::Mermaid.TrixiParticlesComponentIntegrator, key, value)
+function Sirens.setstate!(compInt::Sirens.TrixiParticlesComponentIntegrator, key, value)
     derivative_discontinuity!(compInt.integrator, true)
     if first(key.variable) == '#'
         if key.variable == "#time"
@@ -91,12 +91,12 @@ function Mermaid.setstate!(compInt::Mermaid.TrixiParticlesComponentIntegrator, k
     compInt.integrator[index] = value
 end
 
-function Mermaid.setstate!(compInt::Mermaid.TrixiParticlesComponentIntegrator, value)
+function Sirens.setstate!(compInt::Sirens.TrixiParticlesComponentIntegrator, value)
     derivative_discontinuity!(compInt.integrator, true)
     compInt.integrator.u = value
 end
 
-function Mermaid.variables(component::Mermaid.TrixiParticlesComponent)
+function Sirens.variables(component::Sirens.TrixiParticlesComponent)
     return union(keys(component.state_names), ["#semi", "#time", "#state", "#integrator"])
 end
 

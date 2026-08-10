@@ -33,7 +33,7 @@
         timestep = 1.0
     )
 
-    mp = MermaidProblem(components = [c], connectors = []; tspan = tspan)
+    mp = SirenProblem(components = [c], connectors = []; tspan = tspan)
     sol = solve(mp, MinimumTimeStepper())
 
     @test all(sol["SIR.S"] .== 990) # No infected to model won't change
@@ -56,7 +56,7 @@
         outputs = ["SIR.I"],
         func = x -> round(Int, x)
     )
-    mp2 = MermaidProblem(components = [odecomp, c], connectors = [conn]; tspan = tspan)
+    mp2 = SirenProblem(components = [odecomp, c], connectors = [conn]; tspan = tspan)
     sol2 = solve(mp2, MinimumTimeStepper())
 
     @test !all(sol2["SIR.S"] .== 990)
@@ -74,7 +74,7 @@ end
     p = (β, ν)
 
     function f1(du, u, p, t)
-        du[4] = 0 # This will be controlled by Mermaid
+        du[4] = 0 # This will be controlled by Sirens
         nothing
     end
     tspan = (0.0, 250.0)
@@ -125,7 +125,7 @@ end
         func = x -> round(Int, x)
     )
 
-    mp = MermaidProblem(components = [c, odecomp], connectors = [conn]; tspan = tspan)
+    mp = SirenProblem(components = [c, odecomp], connectors = [conn]; tspan = tspan)
     sol = solve(mp, MinimumTimeStepper())
     @test 240.0 < sol["SIR.u"][end] < 250.0
 end

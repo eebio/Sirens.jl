@@ -1,5 +1,5 @@
-module Mermaid
-@doc read(joinpath(dirname(@__DIR__), "README.md"), String) Mermaid
+module Sirens
+@doc read(joinpath(dirname(@__DIR__), "README.md"), String) Sirens
 
 # Imports, Usings and Reexports
 import CommonSolve: solve!, solve, init, step!
@@ -12,16 +12,16 @@ using AutoHashEquals
 # Exports
 export AbstractComponent, AbstractTimeDependentComponent, AbstractTimeIndependentComponent
 export AbstractComponentIntegrator
-export AbstractMermaidProblem, AbstractMermaidIntegrator, AbstractMermaidSolver, AbstractMermaidSolution
+export AbstractSirenProblem, AbstractSirenIntegrator, AbstractSirenSolver, AbstractSirenSolution
 export AbstractConnectedVariable, AbstractConnector
 export DEComponent, DuplicatedComponent, MOLComponent, AgentsComponent, SurrogateComponent, JumpComponent, TrixiParticlesComponent
 export DEComponentIntegrator, DuplicatedComponentIntegrator, MOLComponentIntegrator, AgentsComponentIntegrator, SurrogateComponentIntegrator,
        JumpComponentIntegrator, TrixiParticlesComponentIntegrator
 export TimeIndependentComponent
-export Connector, ConnectedVariable, MermaidProblem, MermaidIntegrator
+export Connector, ConnectedVariable, SirenProblem, SirenIntegrator
 export ImplicitConnector
-export AbstractMermaidSolver, MinimumTimeStepper
-export MermaidSolution
+export AbstractSirenSolver, MinimumTimeStepper
+export SirenSolution
 export solve!, solve, init, step!
 export getstate, setstate!, gettime, settime!
 export name, timestep, variables
@@ -31,7 +31,7 @@ export fullname, runconnection, runconnection!
 include("abstracts.jl")
 include("connections.jl")
 include("solutions.jl")
-include("mermaidProblems.jl")
+include("sirenProblems.jl")
 include("solvers.jl")
 include("Duplicated.jl")
 include("extensions.jl")
@@ -105,7 +105,7 @@ Initialises an integrator ([AbstractComponentIntegrator](@ref))
 - `comp::AbstractComponent`: The component to be initialised.
 
 # Returns
-- `MermaidIntegrator`: The initialised integrator for the problem.
+- `SirenIntegrator`: The initialised integrator for the problem.
 """
 function init(::AbstractComponent) end
 

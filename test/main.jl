@@ -53,7 +53,7 @@ end
         timestep = 1.0
     )
 
-    mp = MermaidProblem(components = [c1], connectors = [], tspan = (0.0, 10.0))
+    mp = SirenProblem(components = [c1], connectors = [], tspan = (0.0, 10.0))
 
     alg = MinimumTimeStepper()
     sol = solve(mp, alg)
@@ -67,11 +67,11 @@ end
     @test length(sol[2].t) == 1
     @test (sol[2].u)[ConnectedVariable("Schelling.min_to_be_happy")] ==
           sol["Schelling.min_to_be_happy"][2]
-    @test sol[2] isa MermaidSolution
+    @test sol[2] isa SirenSolution
     @test keys(sol[2].u) == keys(sol.u)
 
     # Test interpolation
-    @test sol(2) isa MermaidSolution
+    @test sol(2) isa SirenSolution
     @test sol(2).t[1] == 2.0
     sol.u[ConnectedVariable("Schelling.min_to_be_happy")][4] = rand()
     @test sol(2.75).t[1] == 2.75
@@ -87,7 +87,7 @@ end
     @test_throws BoundsError sol(1000)
 
     # save_vars
-    mp = MermaidProblem(components = [c1], connectors = [], tspan = (0.0, 10.0))
+    mp = SirenProblem(components = [c1], connectors = [], tspan = (0.0, 10.0))
     sol = solve(
         mp, alg; save_vars = ["Schelling.min_to_be_happy", "Schelling.list_property[2:4]"])
     @test sol["Schelling.min_to_be_happy"] == [3.0 for _ in sol.t]
@@ -102,7 +102,7 @@ end
     @test_throws KeyError sol["Schelling.list_property"]
 
     # saveat
-    mp = MermaidProblem(components = [c1], connectors = [], tspan = (0.0, 10.0))
+    mp = SirenProblem(components = [c1], connectors = [], tspan = (0.0, 10.0))
     sol = solve(mp, alg; saveat = 2)
     @test sol.t == [0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
     # Checks it happens even if the saveat doesn't line up with the time steps
@@ -165,7 +165,7 @@ end
     @test get(sol.u, ConnectedVariable("Schell.min_to_be_happy"), :default) == :default
 end
 
-@testitem "mermaid integrator" begin
+@testitem "siren integrator" begin
     using OrdinaryDiffEq
     using OrdinaryDiffEqLowOrderRK
 
@@ -208,7 +208,7 @@ end
         outputs = ["Predator.prey"]
     )
 
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 1.0))
     integrator = init(mp, MinimumTimeStepper())
 
@@ -241,7 +241,7 @@ end
         outputs = ["Predator.prey"],
         func = x -> x / 1.5
     )
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 1.0))
     integrator = init(mp, MinimumTimeStepper())
     for conn in integrator.connectors
@@ -255,7 +255,7 @@ end
         outputs = ["Prey.predator", "Prey.prey"],
         func = (x, y) -> x * y
     )
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1], tspan = (0.0, 1.0))
+    mp = SirenProblem(components = [c1, c2], connectors = [conn1], tspan = (0.0, 1.0))
     integrator = init(mp, MinimumTimeStepper())
     setstate!(integrator, ConnectedVariable("Predator.predator"), 2.0)
     setstate!(integrator, ConnectedVariable("Predator.prey"), 4.0)
@@ -270,7 +270,7 @@ end
         inputs = ["Predator.predator"],
         outputs = ["Prey.predator_but_spelled_wrong"]
     )
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1], tspan = (0.0, 1.0))
+    mp = SirenProblem(components = [c1, c2], connectors = [conn1], tspan = (0.0, 1.0))
     @test_throws KeyError solve(mp, MinimumTimeStepper())
 
     using Agents
@@ -302,7 +302,7 @@ end
         inputs = ["Schelling.group[1]", "Schelling.group[2]", "Schelling.group[3]"],
         outputs = ["Schelling.list_property"]
     )
-    mp = MermaidProblem(components = [c1], connectors = [conn1], tspan = (0.0, 10.0))
+    mp = SirenProblem(components = [c1], connectors = [conn1], tspan = (0.0, 10.0))
     alg = MinimumTimeStepper()
 
     int = init(mp, alg)
@@ -329,12 +329,12 @@ end
     @test isnothing(getstate(int, ConnectedVariable("Schell.list_property")))
     setstate!(int, ConnectedVariable("Schell.list_property"), [1, 2, 3])
 
-    @test Mermaid._has_component(mp.components, "Schell") == false
-    @test Mermaid._has_component(mp.components, "Schelling") == true
+    @test Sirens._has_component(mp.components, "Schell") == false
+    @test Sirens._has_component(mp.components, "Schelling") == true
 end
 
 @testitem "non-advancing component throws error" begin
-    using Mermaid, CommonSolve
+    using Sirens, CommonSolve
 
     struct StuckComponent <: AbstractComponent
         name::String
@@ -354,30 +354,30 @@ end
         # Intentionally does not advance time
     end
 
-    function Mermaid.getstate(compInt::StuckIntegrator, key)
+    function Sirens.getstate(compInt::StuckIntegrator, key)
         return compInt.t
     end
 
-    function Mermaid.getstate(compInt::StuckIntegrator)
+    function Sirens.getstate(compInt::StuckIntegrator)
         return compInt.t
     end
 
-    function Mermaid.setstate!(compInt::StuckIntegrator, key, value)
+    function Sirens.setstate!(compInt::StuckIntegrator, key, value)
         if key.variable == "#time"
             compInt.t = value
         end
     end
 
-    function Mermaid.setstate!(compInt::StuckIntegrator, value)
+    function Sirens.setstate!(compInt::StuckIntegrator, value)
         compInt.t = value
     end
 
-    function Mermaid.variables(component::StuckComponent)
+    function Sirens.variables(component::StuckComponent)
         return ["#time"]
     end
 
     comp = StuckComponent("Stuck", 0.1)
-    mp = MermaidProblem(components = [comp], connectors = [], tspan = (0.0, 1.0))
+    mp = SirenProblem(components = [comp], connectors = [], tspan = (0.0, 1.0))
     @test_throws "Component Stuck failed to advance: time did not move forward from 0.0." solve(mp, MinimumTimeStepper())
 end
 
@@ -438,11 +438,11 @@ end
         outputs = ["Predator.prey"]
     )
 
-    mp1 = MermaidProblem(
+    mp1 = SirenProblem(
         components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 1.0),
         timescales = [1, 1 // 60])
 
-    mp2 = MermaidProblem(
+    mp2 = SirenProblem(
         components = [c1, c3], connectors = [conn1, conn2], tspan = (0.0, 1.0))
 
     alg = MinimumTimeStepper()
@@ -457,7 +457,7 @@ end
           sol2.t[1:min(length(sol1.t), length(sol2.t))]
 end
 
-@testitem "mermaid problem constructor" begin
+@testitem "siren problem constructor" begin
     using OrdinaryDiffEq
     using OrdinaryDiffEqLowOrderRK
 
@@ -501,15 +501,15 @@ end
     )
 
     # Tspan as a vector
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [c1, c2], connectors = [conn1, conn2], tspan = [0.0, 1.0])
 
     # empty connectors
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [c1, c2], connectors = [], tspan = (0.0, 1.0))
 
     # empty components
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [], connectors = [conn1, conn2], tspan = (0.0, 1.0))
 
     # duplicate component names
@@ -520,20 +520,20 @@ end
         state_names = OrderedDict("predator" => 1, "prey" => 2),
         intkwargs = (;adaptive = false, dt = 0.002)
     )
-    @test_throws ErrorException MermaidProblem(
+    @test_throws ErrorException SirenProblem(
         components = [c1, c2, c3], connectors = [conn1, conn2], tspan = (0.0, 1.0))
 
     # tuple timescales
-    mp = MermaidProblem(
+    mp = SirenProblem(
         components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 1.0), timescales = (1.0, 2.0))
 
     # tspan too short
-    @test_throws ArgumentError MermaidProblem(
+    @test_throws ArgumentError SirenProblem(
         components = [c1, c2], connectors = [conn1, conn2], tspan = [0.0])
 
     # non-kwarg constructor
-    mp = MermaidProblem([c1, c2], [conn1, conn2], (0.0, 1.0))
-    mp = MermaidProblem([c1, c2], [conn1, conn2], [0.0, 1.0], [1.0, 1.0])
+    mp = SirenProblem([c1, c2], [conn1, conn2], (0.0, 1.0))
+    mp = SirenProblem([c1, c2], [conn1, conn2], [0.0, 1.0], [1.0, 1.0])
 end
 
 @testitem "connectors" begin

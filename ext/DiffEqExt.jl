@@ -1,6 +1,6 @@
 module DiffEqExt
 
-using Mermaid
+using Sirens
 using CommonSolve
 using DiffEqBase
 using OrderedCollections: OrderedDict
@@ -11,7 +11,7 @@ using OrderedCollections: OrderedDict
                 state_names::Dict{String,Any}=Dict{String,Any}())
     DEComponent(model::DiffEqBase.AbstractDEProblem; kwargs...)
 
-A Mermaid component that wraps a SciML Differential Equations problem (ODEProblem,
+A Sirens component that wraps a SciML Differential Equations problem (ODEProblem,
     DAEProblem, etc).
 
 # Arguments
@@ -44,31 +44,31 @@ comp = DEComponent(prob, Tsit5(); name=\"ode_comp\",
                    state_names=Dict(\"x\" => 1))
 ```
 """
-function Mermaid.DEComponent(model::DiffEqBase.AbstractDEProblem,
+function Sirens.DEComponent(model::DiffEqBase.AbstractDEProblem,
         alg; name = "DE", timestep::Real = 1.0, intkwargs = (;),
         state_names = Dict{String, Any}())
-    return Mermaid.DEComponent(model, name, state_names, timestep, alg, intkwargs)
+    return Sirens.DEComponent(model, name, state_names, timestep, alg, intkwargs)
 end
 
-function Mermaid.DEComponent(model::DiffEqBase.AbstractDEProblem; kwargs...)
-    return Mermaid.DEComponent(model, nothing; kwargs...)
+function Sirens.DEComponent(model::DiffEqBase.AbstractDEProblem; kwargs...)
+    return Sirens.DEComponent(model, nothing; kwargs...)
 end
 
-function CommonSolve.init(c::Mermaid.DEComponent)
+function CommonSolve.init(c::Sirens.DEComponent)
     if isnothing(c.alg)
         integrator = init(c.model; c.intkwargs...)
-        return Mermaid.DEComponentIntegrator(integrator, c)
+        return Sirens.DEComponentIntegrator(integrator, c)
     else
         integrator = init(c.model, c.alg; c.intkwargs...)
-        return Mermaid.DEComponentIntegrator(integrator, c)
+        return Sirens.DEComponentIntegrator(integrator, c)
     end
 end
 
-function CommonSolve.step!(compInt::Mermaid.DEComponentIntegrator)
+function CommonSolve.step!(compInt::Sirens.DEComponentIntegrator)
     CommonSolve.step!(compInt.integrator, timestep(compInt), true)
 end
 
-function Mermaid.getstate(compInt::Mermaid.DEComponentIntegrator, key)
+function Sirens.getstate(compInt::Sirens.DEComponentIntegrator, key)
     if first(key.variable) == '#'
         if key.variable == "#time"
             return compInt.integrator.t
@@ -82,11 +82,11 @@ function Mermaid.getstate(compInt::Mermaid.DEComponentIntegrator, key)
     return compInt.integrator[index]
 end
 
-function Mermaid.getstate(compInt::Mermaid.DEComponentIntegrator)
+function Sirens.getstate(compInt::Sirens.DEComponentIntegrator)
     return compInt.integrator.u
 end
 
-function Mermaid.setstate!(compInt::Mermaid.DEComponentIntegrator, key, value)
+function Sirens.setstate!(compInt::Sirens.DEComponentIntegrator, key, value)
     derivative_discontinuity!(compInt.integrator, true)
     if first(key.variable) == '#'
         if key.variable == "#time"
@@ -104,12 +104,12 @@ function Mermaid.setstate!(compInt::Mermaid.DEComponentIntegrator, key, value)
     compInt.integrator[index] = value
 end
 
-function Mermaid.setstate!(compInt::Mermaid.DEComponentIntegrator, value)
+function Sirens.setstate!(compInt::Sirens.DEComponentIntegrator, value)
     derivative_discontinuity!(compInt.integrator, true)
     compInt.integrator.u = value
 end
 
-function Mermaid.variables(component::Mermaid.DEComponent)
+function Sirens.variables(component::Sirens.DEComponent)
     return union(keys(component.state_names), ["#time", "#integrator", "#state"])
 end
 
