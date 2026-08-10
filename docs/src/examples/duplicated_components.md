@@ -127,9 +127,9 @@ SirenProblem
 ```
 
 ```@example tutorial
-mp = SirenProblem(components=[dup_comp, comp2], connectors=[conn1, conn2], tspan=tspan)
+sp = SirenProblem(components=[dup_comp, comp2], connectors=[conn1, conn2], tspan=tspan)
 alg = MinimumTimeStepper()
-sol = solve(mp, alg)
+sol = solve(sp, alg)
 ```
 
 ## Plotting the solution
@@ -182,8 +182,8 @@ conn3 = Connector(
     func=(model) -> plot_input(model)
 )
 
-mp = SirenProblem(components=[dup_comp, comp2], connectors=[conn1, conn2, conn3], tspan=tspan)
-sol = solve(mp, alg)
+sp = SirenProblem(components=[dup_comp, comp2], connectors=[conn1, conn2, conn3], tspan=tspan)
+sol = solve(sp, alg)
 
 save("forest_fire.mp4", io)
 

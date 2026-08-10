@@ -170,9 +170,9 @@ conn4 = Connector(
     func=(model) -> plot_input(model)
 )
 
-mp = SirenProblem(components=[dup_comp, comp2], connectors=[conn3, conn1, conn2, conn4], tspan=tspan)
+sp = SirenProblem(components=[dup_comp, comp2], connectors=[conn3, conn1, conn2, conn4], tspan=tspan)
 alg = MinimumTimeStepper()
-sol = solve(mp, alg)
+sol = solve(sp, alg)
 
 save("cell_colony.mp4", io)
 

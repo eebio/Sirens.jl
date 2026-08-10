@@ -66,7 +66,7 @@ end
             name="ode",
             timestep=1.0,
             state_names=OrderedDict("happy" => 1),
-            intkwargs=(;dt = 1.0)
+            intkwargs=(; dt=1.0)
         )
 
         conn = Connector(
@@ -74,10 +74,10 @@ end
             outputs=["Schelling.min_to_be_happy"]
         )
 
-        mp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
+        sp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
 
         alg = MinimumTimeStepper()
-        intMer = init(mp, alg)
+        intMer = init(sp, alg)
 
         # Test for type stability performance
         @test_opt AgentsComponent(model;
@@ -91,7 +91,7 @@ end
             name="ode",
             timestep=1.0,
             state_names=OrderedDict("happy" => 1),
-            intkwargs=(;dt = 1.0)
+            intkwargs=(; dt=1.0)
         )
 
         r = @report_opt Connector(["ode.happy"], ["Schelling.min_to_be_happy"])
@@ -109,8 +109,8 @@ end
         @test isconcretetype(types[1])
 
         # Tuples for save_vars are type stable
-        @test_opt init(mp, alg; save_vars=())
-        @test_opt init(mp, alg; save_vars=(a, b))
+        @test_opt init(sp, alg; save_vars=())
+        @test_opt init(sp, alg; save_vars=(a, b))
         #=
         The following things are expected/known to be type unstable in solve!:
         - The creation of a SirenSolutionData object cannot infer the types of the values at compile time

@@ -28,13 +28,13 @@
     jump_prob = JumpProblem(prob, Direct(), jump, jump2)
 
     c = JumpComponent(jump_prob, SSAStepper();
-        name = "SIR",
-        state_names = Dict("S" => 1, "I" => 2, "R" => 3),
-        timestep = 1.0
+        name="SIR",
+        state_names=Dict("S" => 1, "I" => 2, "R" => 3),
+        timestep=1.0
     )
 
-    mp = SirenProblem(components = [c], connectors = []; tspan = tspan)
-    sol = solve(mp, MinimumTimeStepper())
+    sp = SirenProblem(components=[c], connectors=[]; tspan=tspan)
+    sol = solve(sp, MinimumTimeStepper())
 
     @test all(sol["SIR.S"] .== 990) # No infected to model won't change
     @test all(sol["SIR.R"] .== 0) # No infected to model won't change
@@ -46,17 +46,17 @@
     u₀ = 0.0
     odeprob = ODEProblem(f, u₀, tspan, nothing)
     odecomp = DEComponent(odeprob, Tsit5();
-        name = "ODE",
-        state_names = Dict("u" => 1),
-        timestep = 1.0
+        name="ODE",
+        state_names=Dict("u" => 1),
+        timestep=1.0
     )
 
     conn = Connector(
-        inputs = ["ODE.u"],
-        outputs = ["SIR.I"],
-        func = x -> round(Int, x)
+        inputs=["ODE.u"],
+        outputs=["SIR.I"],
+        func=x -> round(Int, x)
     )
-    mp2 = SirenProblem(components = [odecomp, c], connectors = [conn]; tspan = tspan)
+    mp2 = SirenProblem(components=[odecomp, c], connectors=[conn]; tspan=tspan)
     sol2 = solve(mp2, MinimumTimeStepper())
 
     @test !all(sol2["SIR.S"] .== 990)
@@ -100,10 +100,10 @@ end
     jump_prob = JumpProblem(prob, Direct(), jump, jump2)
 
     c = JumpComponent(jump_prob, Tsit5();
-        name = "SIR",
-        state_names = Dict("S" => 1, "I" => 2, "R" => 3, "u" => 4),
-        timestep = 1.0,
-        intkwargs = (;adaptive = false, dt = 0.002)
+        name="SIR",
+        state_names=Dict("S" => 1, "I" => 2, "R" => 3, "u" => 4),
+        timestep=1.0,
+        intkwargs=(; adaptive=false, dt=0.002)
     )
 
     # Override the dynamics of the ODE with our own ODE
@@ -113,20 +113,20 @@ end
     u₀ = 0.0
     odeprob = ODEProblem(f2, u₀, tspan, nothing)
     odecomp = DEComponent(odeprob, Euler();
-        name = "ODE",
-        state_names = Dict("u" => 1),
-        timestep = 1.0,
-        intkwargs = (;adaptive = false, dt = 0.002)
+        name="ODE",
+        state_names=Dict("u" => 1),
+        timestep=1.0,
+        intkwargs=(; adaptive=false, dt=0.002)
     )
 
     conn = Connector(
-        inputs = ["ODE.u"],
-        outputs = ["SIR.u"],
-        func = x -> round(Int, x)
+        inputs=["ODE.u"],
+        outputs=["SIR.u"],
+        func=x -> round(Int, x)
     )
 
-    mp = SirenProblem(components = [c, odecomp], connectors = [conn]; tspan = tspan)
-    sol = solve(mp, MinimumTimeStepper())
+    sp = SirenProblem(components=[c, odecomp], connectors=[conn]; tspan=tspan)
+    sol = solve(sp, MinimumTimeStepper())
     @test 240.0 < sol["SIR.u"][end] < 250.0
 end
 
@@ -162,9 +162,9 @@ end
     jump_prob = JumpProblem(prob, Direct(), jump, jump2)
 
     c = JumpComponent(jump_prob, SSAStepper();
-        name = "SIR",
-        state_names = Dict("S" => 1, "I" => 2, "R" => 3),
-        timestep = 50.0
+        name="SIR",
+        state_names=Dict("S" => 1, "I" => 2, "R" => 3),
+        timestep=50.0
     )
 
     int = init(c)
@@ -230,7 +230,7 @@ end
 
     # Test special variable #integrator
     @test "#integrator" in variables(int)
-    integrator_copy = getstate(int, ConnectedVariable("SIR.#integrator"); copy = true)
+    integrator_copy = getstate(int, ConnectedVariable("SIR.#integrator"); copy=true)
     @test typeof(integrator_copy) <: JumpProcesses.SSAIntegrator
     @test integrator_copy.u == [500, 50, 100]
     # Modify and step

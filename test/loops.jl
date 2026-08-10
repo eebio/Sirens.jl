@@ -52,8 +52,8 @@ end
         outputs=["comp1.y"]
     )
 
-    mp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 1.0))
-    sol = solve(mp, MinimumTimeStepper())
+    sp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 1.0))
+    sol = solve(sp, MinimumTimeStepper())
 
     @test all(sol["comp1.y"] .== 0.5)
     @test sol["comp1.x"][end] > sol["comp1.x"][1]

@@ -58,9 +58,9 @@ for tstep in tsteps
     conn1 = Connector(inputs = ["prey_comp.x"], outputs = ["predator_comp.x"])
     conn2 = Connector(inputs = ["predator_comp.y"], outputs = ["prey_comp.y"])
 
-    mp = SirenProblem(components = [comp1, comp2], connectors = [conn1, conn2], tspan=tspan)
+    sp = SirenProblem(components = [comp1, comp2], connectors = [conn1, conn2], tspan=tspan)
     alg = MinimumTimeStepper()
-    solMer = solve(mp, alg; saveat = (integrator, t) -> t>0.9, save_vars = ["prey_comp.x", "predator_comp.y"])
+    solMer = solve(sp, alg; saveat = (integrator, t) -> t>0.9, save_vars = ["prey_comp.x", "predator_comp.y"])
 
     push!(error1, abs(solMer(1.0)["prey_comp.x"] - sol.u[end][1]))
     push!(error2, abs(solMer(1.0)["predator_comp.y"] - sol.u[end][2]))

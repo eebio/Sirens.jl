@@ -33,7 +33,7 @@
     # Convert the PDE problem into an ODE problem
     prob = discretize(pdesys, discretization)
 
-    solPDE = solve(prob, Euler(), dt = 0.0001, adaptive = false)
+    solPDE = solve(prob, Euler(), dt=0.0001, adaptive=false)
 
     # Parameters, variables, and derivatives
     # 1D PDE and boundary conditions
@@ -66,11 +66,11 @@
     end
 
     c1 = MOLComponent(prob, Euler();
-        name = "PDE",
-        state_names = OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
+        name="PDE",
+        state_names=OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
             "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
-        timestep = 0.0001,
-        intkwargs = (;adaptive = false, dt = 0.0001)
+        timestep=0.0001,
+        intkwargs=(; adaptive=false, dt=0.0001)
     )
 
     function f2(u, p, t)
@@ -81,21 +81,21 @@
     prob = ODEProblem(f2, u0, tspan)
     c2 = DEComponent(
         prob, Euler();
-        name = "G",
-        timestep = 0.0001,
-        state_names = OrderedDict("g" => 1),
-        intkwargs = (;adaptive = false, dt = 0.0001)
+        name="G",
+        timestep=0.0001,
+        state_names=OrderedDict("g" => 1),
+        intkwargs=(; adaptive=false, dt=0.0001)
     )
 
     conn = Connector(
-        inputs = ["G.g"],
-        outputs = ["PDE.g[1:9]"]
+        inputs=["G.g"],
+        outputs=["PDE.g[1:9]"]
     )
 
-    mp = SirenProblem(components = [c1, c2], connectors = [conn], tspan = (0.0, 0.01))
-    sol = solve(mp, MinimumTimeStepper())
+    sp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 0.01))
+    sol = solve(sp, MinimumTimeStepper())
     finalsol = [0, sol(0.01)["PDE.u"]..., 0]
-    @test all(isapprox.(finalsol, solPDE[u(t, x)][end, :], atol = 1e-8))
+    @test all(isapprox.(finalsol, solPDE[u(t, x)][end, :], atol=1e-8))
 end
 
 @testitem "state control" begin
@@ -136,19 +136,19 @@ end
     end
 
     c1 = MOLComponent(prob, Tsit5();
-        name = "PDE",
-        state_names = OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
+        name="PDE",
+        state_names=OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
             "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
-        timestep = 0.0001
+        timestep=0.0001
     )
 
     conn1 = Connector(
-        inputs = ["PDE.u[1:9]"],
-        outputs = ["other.u"]
+        inputs=["PDE.u[1:9]"],
+        outputs=["other.u"]
     )
     conn2 = Connector(
-        inputs = ["PDE.g[1:9]"],
-        outputs = ["other.g"]
+        inputs=["PDE.g[1:9]"],
+        outputs=["other.g"]
     )
     integrator = init(c1)
 
@@ -198,19 +198,19 @@ end
 
     # Test error on symbolic indexing
     c1 = MOLComponent(prob, Tsit5();
-        name = "PDE",
-        state_names = OrderedDict("u" => u, "g" => g),
-        timestep = 0.0001
+        name="PDE",
+        state_names=OrderedDict("u" => u, "g" => g),
+        timestep=0.0001
     )
     int = init(c1)
     @test_throws ArgumentError getstate(int, ConnectedVariable("PDE.u"))
 
     # Reset to numeric state_names for special variable tests
     c1 = MOLComponent(prob, Tsit5();
-        name = "PDE",
-        state_names = OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
+        name="PDE",
+        state_names=OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
             "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
-        timestep = 0.0001
+        timestep=0.0001
     )
     int = init(c1)
 
@@ -227,7 +227,7 @@ end
 
     # Test special variable #integrator
     @test "#integrator" in variables(int)
-    integrator_copy = getstate(int, ConnectedVariable("PDE.#integrator"); copy = true)
+    integrator_copy = getstate(int, ConnectedVariable("PDE.#integrator"); copy=true)
     @test typeof(integrator_copy) <: SciMLBase.DEIntegrator
     @test integrator_copy.u == new_state
     # Modify state and step
