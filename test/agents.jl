@@ -67,30 +67,30 @@
     sp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
 
     alg = MinimumTimeStepper()
-    intMer = init(sp, alg)
-    solMer = solve!(intMer)
+    sirenInt = init(sp, alg)
+    solMer = solve!(sirenInt)
 
     @test solMer["ode.happy"][1:(end-1)] == solMer["Schelling.min_to_be_happy"][2:end]
 
-    intMer = init(sp, alg)
+    sirenInt = init(sp, alg)
     for _ in 1:10
-        step!(intMer)
+        step!(sirenInt)
     end
     # Early on, min_to_be_happy is high, so lots of agents moving
-    pos = [intMer.integrators[1].integrator[i].pos for i in 1:300]
-    step!(intMer)
-    pos2 = [intMer.integrators[1].integrator[i].pos for i in 1:300]
+    pos = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
+    step!(sirenInt)
+    pos2 = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
     @test any(pos != pos2)
     for _ in 1:35
-        step!(intMer)
+        step!(sirenInt)
     end
     # Later, min_to_be_happy is low, so agents aren't moving
-    pos3 = [intMer.integrators[1].integrator[i].pos for i in 1:300]
-    step!(intMer)
-    pos4 = [intMer.integrators[1].integrator[i].pos for i in 1:300]
+    pos3 = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
+    step!(sirenInt)
+    pos4 = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
     @test all(pos3 == pos4)
     # And all agents are happy
-    @test all([intMer.integrators[1].integrator[i].mood for i in 1:300])
+    @test all([sirenInt.integrators[1].integrator[i].mood for i in 1:300])
 end
 
 @testitem "state control" begin

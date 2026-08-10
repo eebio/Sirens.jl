@@ -77,7 +77,7 @@ end
         sp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
 
         alg = MinimumTimeStepper()
-        intMer = init(sp, alg)
+        sirenInt = init(sp, alg)
 
         # Test for type stability performance
         @test_opt AgentsComponent(model;
@@ -118,6 +118,6 @@ end
         - The return value of getstate (and therefore the input value of setstate! in runconnection!)
         - @assert in step! for floating point comparison of times
         =#
-        @test_opt solve!(intMer) broken=true
+        @test_opt solve!(sirenInt) broken=true
     end
 end
