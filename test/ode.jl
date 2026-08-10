@@ -53,13 +53,13 @@
     sp = SirenProblem(components=[c1, c2], connectors=[conn1, conn2], tspan=(0.0, 0.1))
 
     alg = MinimumTimeStepper()
-    solMer = solve(sp, alg)
+    sirenSol = solve(sp, alg)
 
-    @test all(solMer.t .≈ solODE.t)
-    preyODE = [solODE(t)[1] for t in solMer.t]
-    predatorODE = [solODE(t)[2] for t in solMer.t]
-    @test all(solMer["Prey.prey"] .≈ preyODE)
-    @test all(solMer["Predator.predator"] .≈ predatorODE)
+    @test all(sirenSol.t .≈ solODE.t)
+    preyODE = [solODE(t)[1] for t in sirenSol.t]
+    predatorODE = [solODE(t)[2] for t in sirenSol.t]
+    @test all(sirenSol["Prey.prey"] .≈ preyODE)
+    @test all(sirenSol["Predator.predator"] .≈ predatorODE)
 
     # If you don't specify algorithm, DE decides for you
     c2 = DEComponent(
@@ -125,14 +125,14 @@ end
     using CommonSolve
     alg = MinimumTimeStepper()
     # Ensure the code is compiled
-    solMer = solve(sp, alg)
+    sirenSol = solve(sp, alg)
 
-    preyODE = [solODE(t; idxs=x) for t in solMer.t]
-    predatorODE = [solODE(t; idxs=y) for t in solMer.t]
+    preyODE = [solODE(t; idxs=x) for t in sirenSol.t]
+    predatorODE = [solODE(t; idxs=y) for t in sirenSol.t]
 
-    @test all(solMer.t .≈ solODE.t)
-    @test all(solMer["Prey.prey"] .≈ preyODE)
-    @test all(solMer["Predator.predator"] .≈ predatorODE)
+    @test all(sirenSol.t .≈ solODE.t)
+    @test all(sirenSol["Prey.prey"] .≈ preyODE)
+    @test all(sirenSol["Predator.predator"] .≈ predatorODE)
 end
 
 @testitem "state control" begin

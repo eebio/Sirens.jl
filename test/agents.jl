@@ -68,9 +68,9 @@
 
     alg = MinimumTimeStepper()
     sirenInt = init(sp, alg)
-    solMer = solve!(sirenInt)
+    sirenSol = solve!(sirenInt)
 
-    @test solMer["ode.happy"][1:(end-1)] == solMer["Schelling.min_to_be_happy"][2:end]
+    @test sirenSol["ode.happy"][1:(end-1)] == sirenSol["Schelling.min_to_be_happy"][2:end]
 
     sirenInt = init(sp, alg)
     for _ in 1:10

@@ -60,10 +60,10 @@ for tstep in tsteps
 
     sp = SirenProblem(components = [comp1, comp2], connectors = [conn1, conn2], tspan=tspan)
     alg = MinimumTimeStepper()
-    solMer = solve(sp, alg; saveat = (integrator, t) -> t>0.9, save_vars = ["prey_comp.x", "predator_comp.y"])
+    sirenSol = solve(sp, alg; saveat = (integrator, t) -> t>0.9, save_vars = ["prey_comp.x", "predator_comp.y"])
 
-    push!(error1, abs(solMer(1.0)["prey_comp.x"] - sol.u[end][1]))
-    push!(error2, abs(solMer(1.0)["predator_comp.y"] - sol.u[end][2]))
+    push!(error1, abs(sirenSol(1.0)["prey_comp.x"] - sol.u[end][1]))
+    push!(error2, abs(sirenSol(1.0)["predator_comp.y"] - sol.u[end][2]))
 end
 
 plot(tsteps, error1, label="Prey Error", xlabel="Time Step", ylabel="Error", xscale=:log10, yscale=:log10)
