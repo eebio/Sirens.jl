@@ -65,7 +65,7 @@ struct SirenProblem{C<:Tuple,CC<:Tuple} <: AbstractSirenProblem
         # Check for algebraic loops in the connections
         report_algebraic_loop(connectors)
 
-        return new{typeof(components), typeof(connectors)}(components, connectors, tspan, timescales)
+        return new{typeof(components),typeof(connectors)}(components, connectors, tspan, timescales)
     end
 end
 
@@ -96,14 +96,14 @@ mutable struct SirenIntegrator{
                AbstractSirenIntegrator
     integrators::I
     connectors::CC
-    tspan::Tuple{Float64, Float64}
+    tspan::Tuple{Float64,Float64}
     currtime::Float64
     alg::X
     save_vars::SV
     saveat::S
     timescales::Vector{Float64}
 
-    function SirenIntegrator(integrators::I, connectors::CC, tspan::Tuple{Float64, Float64}, currtime::Float64, alg::X, save_vars::SV, saveat::S, timescales::Vector{<:Real}) where {I<:Tuple,CC<:Tuple,X<:AbstractSirenSolver,SV<:Tuple,S<:Union{Function,AbstractVector}}
+    function SirenIntegrator(integrators::I, connectors::CC, tspan::Tuple{Float64,Float64}, currtime::Float64, alg::X, save_vars::SV, saveat::S, timescales::Vector{<:Real}) where {I<:Tuple,CC<:Tuple,X<:AbstractSirenSolver,SV<:Tuple,S<:Union{Function,AbstractVector}}
         return new{I,CC,X,SV,S}(integrators, connectors, tspan, currtime, alg, save_vars, saveat, timescales)
     end
 end
@@ -134,7 +134,7 @@ Defines the integrator for a Sirens hybrid simulation.
 - `SirenIntegrator`: A mutable integrator ready for solving.
 """
 function CommonSolve.init(prob::AbstractSirenProblem, alg::AbstractSirenSolver;
-        save_vars = nothing, saveat = nothing)
+    save_vars=nothing, saveat=nothing)
     # Initialize the solver
     integrators = map(c -> something(init(c)), prob.components)
 
@@ -173,18 +173,18 @@ Advance the state of the integrator `int` by one time step.
 - `int::Union{AbstractSirenIntegrator, AbstractComponentIntegrator}`: The integrator to
     advance.
 """
-function CommonSolve.step!(merInt::AbstractSirenIntegrator)
-    step!(merInt, merInt.alg)
+function CommonSolve.step!(sirenInt::AbstractSirenIntegrator)
+    step!(sirenInt, sirenInt.alg)
 end
 
 """
-    solve!(merInt::AbstractSirenIntegrator)
+    solve!(sirenInt::AbstractSirenIntegrator)
 
 Solves the problem using the SirenIntegrator by advancing it until the end of the
 time span, recording solutions according to the `saveat` configuration.
 
 # Arguments
-- `merInt::AbstractSirenIntegrator`: The integrator to be solved.
+- `sirenInt::AbstractSirenIntegrator`: The integrator to be solved.
 
 # Returns
 - `SirenSolution`: The [solution](@ref SirenSolution) of the problem, containing
@@ -195,34 +195,34 @@ time span, recording solutions according to the `saveat` configuration.
 - Repeatedly calls `step!(integrator)` until `currtime >= tspan[2]`.
 - Records state after each step if `saveat` is satisfied.
 """
-function CommonSolve.solve!(merInt::AbstractSirenIntegrator)
-    sol = SirenSolution(merInt)
-    if should_save(merInt, merInt.saveat)
-        update_solution!(sol, merInt)
+function CommonSolve.solve!(sirenInt::AbstractSirenIntegrator)
+    sol = SirenSolution(sirenInt)
+    if should_save(sirenInt, sirenInt.saveat)
+        update_solution!(sol, sirenInt)
     end
-    while merInt.currtime < merInt.tspan[2]
-        step!(merInt)
-        if should_save(merInt, merInt.saveat)
-            update_solution!(sol, merInt)
+    while sirenInt.currtime < sirenInt.tspan[2]
+        step!(sirenInt)
+        if should_save(sirenInt, sirenInt.saveat)
+            update_solution!(sol, sirenInt)
         end
     end
     return sol
 end
 
-function should_save(merInt::AbstractSirenIntegrator, saveat::AbstractVector)
-    if merInt.currtime in saveat
+function should_save(sirenInt::AbstractSirenIntegrator, saveat::AbstractVector)
+    if sirenInt.currtime in saveat
         return true
     else
         return false
     end
 end
 
-function should_save(merInt::AbstractSirenIntegrator, saveat::Function)
-    return saveat(merInt, merInt.currtime)
+function should_save(sirenInt::AbstractSirenIntegrator, saveat::Function)
+    return saveat(sirenInt, sirenInt.currtime)
 end
 
-function getstate(merInt::AbstractSirenIntegrator, key::AbstractConnectedVariable; kwargs...)
-    return _getstate_by_name(merInt.integrators, key; kwargs...)
+function getstate(sirenInt::AbstractSirenIntegrator, key::AbstractConnectedVariable; kwargs...)
+    return _getstate_by_name(sirenInt.integrators, key; kwargs...)
 end
 
 @inline _getstate_by_name(::Tuple{}, key::AbstractConnectedVariable; kwargs...) = nothing
@@ -234,13 +234,13 @@ end
     return _getstate_by_name(Base.tail(integrators), key; kwargs...)
 end
 
-function gettime(merInt::AbstractSirenIntegrator)
+function gettime(sirenInt::AbstractSirenIntegrator)
     # Get the current time of the integrator
-    return merInt.currtime
+    return sirenInt.currtime
 end
 
-function setstate!(merInt::AbstractSirenIntegrator, key::AbstractConnectedVariable, value)
-    _setstate_by_name!(merInt.integrators, key, value)
+function setstate!(sirenInt::AbstractSirenIntegrator, key::AbstractConnectedVariable, value)
+    _setstate_by_name!(sirenInt.integrators, key, value)
     return nothing
 end
 
@@ -255,7 +255,7 @@ end
 end
 
 """
-    gettime(merInt::AbstractComponentIntegrator)
+    gettime(sirenInt::AbstractComponentIntegrator)
 
 Get the current time of the integrator.
 
@@ -271,7 +271,7 @@ function gettime(int::AbstractComponentIntegrator)::Real
 end
 
 """
-    settime!(merInt::AbstractComponentIntegrator, t)
+    settime!(sirenInt::AbstractComponentIntegrator, t)
 
 Set the current time of the integrator.
 
@@ -293,7 +293,7 @@ Get the variables names of the component or integrator that can be accessed thro
 """
 variables(integrator::AbstractComponentIntegrator) = variables(integrator.component)
 
-function getstate(args...; copy = false, kwargs...)
+function getstate(args...; copy=false, kwargs...)
     if copy
         return deepcopy(getstate(args...; kwargs...))
     else

@@ -85,7 +85,7 @@ Parse an index string into a vector of integers.
 - Range: "1:5" → [1, 2, 3, 4, 5]
 - Vector with brackets: "[1, 3]" → [1, 3]
 """
-function _parse_index(s::AbstractString)::Union{Vector{Int}, Int}
+function _parse_index(s::AbstractString)::Union{Vector{Int},Int}
     s = strip(s)
     # Handle vector notation: "[1, 3]"
     if startswith(s, '[') && endswith(s, ']')
@@ -218,21 +218,21 @@ end
 end
 
 """
-    runconnection(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
+    runconnection(sirenInt::AbstractSirenIntegrator, conn::AbstractConnector)
 
-Extract all the input states from `merInt`, apply the connection function, and return the
+Extract all the input states from `sirenInt`, apply the connection function, and return the
 output.
 
 # Arguments
-- `merInt::AbstractSirenIntegrator`: The Sirens integrator containing the components.
+- `sirenInt::AbstractSirenIntegrator`: The Sirens integrator containing the components.
 - `conn::AbstractConnector`: The connector defining the connection.
 """
-function runconnection(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
+function runconnection(sirenInt::AbstractSirenIntegrator, conn::AbstractConnector)
     # Get the values of the connectors inputs
     inputs = []
     for input in conn.inputs
-        if _has_component(merInt.integrators, input.component)
-            push!(inputs, getstate(merInt, input))
+        if _has_component(sirenInt.integrators, input.component)
+            push!(inputs, getstate(sirenInt, input))
         end
     end
     if isnothing(conn.func)
@@ -248,13 +248,13 @@ function runconnection(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
 end
 
 """
-    runconnection!(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
+    runconnection!(sirenInt::AbstractSirenIntegrator, conn::AbstractConnector)
 
-Extract all input states from `merInt`, apply the connection function, and set output
-states in `merInt`.
+Extract all input states from `sirenInt`, apply the connection function, and set output
+states in `sirenInt`.
 
 # Arguments
-- `merInt::AbstractSirenIntegrator`: The Sirens integrator containing components.
+- `sirenInt::AbstractSirenIntegrator`: The Sirens integrator containing components.
 - `conn::AbstractConnector`: The connector defining inputs, outputs, and transformation.
 
 # Behavior
@@ -262,25 +262,25 @@ states in `merInt`.
 2. Sets each output value in the corresponding component via `setstate!`.
 3. Outputs are set in order; later outputs can depend on earlier ones if they share state.
 """
-function runconnection!(merInt::AbstractSirenIntegrator, conn::AbstractConnector)
-    outputs = runconnection(merInt, conn)
+function runconnection!(sirenInt::AbstractSirenIntegrator, conn::AbstractConnector)
+    outputs = runconnection(sirenInt, conn)
     # Set the outputs in the corresponding integrators
     for output in conn.outputs
-        if _has_component(merInt.integrators, output.component)
-            setstate!(merInt, output, outputs)
+        if _has_component(sirenInt.integrators, output.component)
+            setstate!(sirenInt, output, outputs)
         end
     end
     return nothing
 end
 
-function checkconnection(conn::AbstractConnector, merInt::AbstractSirenIntegrator)
+function checkconnection(conn::AbstractConnector, sirenInt::AbstractSirenIntegrator)
     # Check if all inputs are earlier in time than (or equal to) the time of all outputs
     max_input_time = -Inf
     for input in conn.inputs
         conn_tmp = ConnectedVariable(input.component, "#time", nothing, nothing)
-        time_tmp = prevfloat(getstate(merInt, conn_tmp))
+        time_tmp = prevfloat(getstate(sirenInt, conn_tmp))
         # Apply timescales
-        time_tmp *= prevfloat(merInt.timescales[findfirst(i -> name(i) == input.component, merInt.integrators)])
+        time_tmp *= prevfloat(sirenInt.timescales[findfirst(i -> name(i) == input.component, sirenInt.integrators)])
         if time_tmp > max_input_time
             max_input_time = time_tmp
         end
@@ -288,9 +288,9 @@ function checkconnection(conn::AbstractConnector, merInt::AbstractSirenIntegrato
     min_output_time = Inf
     for output in conn.outputs
         conn_tmp = ConnectedVariable(output.component, "#time", nothing, nothing)
-        time_tmp = nextfloat(getstate(merInt, conn_tmp))
+        time_tmp = nextfloat(getstate(sirenInt, conn_tmp))
         # Apply timescales
-        time_tmp *= nextfloat(merInt.timescales[findfirst(i -> name(i) == output.component, merInt.integrators)])
+        time_tmp *= nextfloat(sirenInt.timescales[findfirst(i -> name(i) == output.component, sirenInt.integrators)])
         if time_tmp < min_output_time
             min_output_time = time_tmp
         end

@@ -36,7 +36,7 @@ The time `t` must be within `[sol.t[1], sol.t[end]]`, otherwise a `BoundsError` 
 sol(2.5)  # Interpolate solution at time t=2.5
 ```
 """
-struct SirenSolution{X, Y <: SirenSolutionData} <: AbstractSirenSolution
+struct SirenSolution{X,Y<:SirenSolutionData} <: AbstractSirenSolution
     t::X
     u::Y
 end
@@ -60,26 +60,26 @@ function SirenSolution(int::AbstractSirenIntegrator)
 end
 
 """
-    update_solution!(sol::SirenSolution, merInt::SirenIntegrator)
+    update_solution!(sol::SirenSolution, sirenInt::SirenIntegrator)
 
 Update the [SirenSolution](@ref) `sol` with the current time and state from the
     SirenIntegrator.
 
 # Arguments
 - `sol::SirenSolution`: The [SirenSolution](@ref) to be updated.
-- `merInt::SirenIntegrator`: The integrator object providing the current time (`currtime`)
+- `sirenInt::SirenIntegrator`: The integrator object providing the current time (`currtime`)
     and states to access via `getstate`.
 """
-function update_solution!(sol::AbstractSirenSolution, merInt::AbstractSirenIntegrator)
-    push!(sol.t, merInt.currtime)
-    _push_states!(sol.u.values, sol.u.keys, merInt)
+function update_solution!(sol::AbstractSirenSolution, sirenInt::AbstractSirenIntegrator)
+    push!(sol.t, sirenInt.currtime)
+    _push_states!(sol.u.values, sol.u.keys, sirenInt)
     return sol
 end
 
-@inline _push_states!(::Tuple{}, ::Tuple{}, merInt) = nothing
-@inline function _push_states!(values::Tuple, keys::Tuple, merInt)
-    push!(first(values), getstate(merInt, first(keys); copy=true))
-    _push_states!(Base.tail(values), Base.tail(keys), merInt)
+@inline _push_states!(::Tuple{}, ::Tuple{}, sirenInt) = nothing
+@inline function _push_states!(values::Tuple, keys::Tuple, sirenInt)
+    push!(first(values), getstate(sirenInt, first(keys); copy=true))
+    _push_states!(Base.tail(values), Base.tail(keys), sirenInt)
     return nothing
 end
 
@@ -131,7 +131,7 @@ function Base.getindex(sol::AbstractSirenSolution, var::AbstractConnectedVariabl
                     if length(var.variableindex) == 1
                         # If the variableindex is a single value, return at that index
                         return [i[findfirst(
-                                    x -> x == var.variableindex[1], key.variableindex)]
+                            x -> x == var.variableindex[1], key.variableindex)]
                                 for i in sol.u[key]]
                     else
                         return [[i[findfirst(x -> x == v, key.variableindex)]
@@ -201,14 +201,14 @@ function (sol::AbstractSirenSolution)(t::Real)
     return SirenSolution([t], data)
 end
 
-function state_type(merInt, cv)
-    state = getstate(merInt, cv)
+function state_type(sirenInt, cv)
+    state = getstate(sirenInt, cv)
     return typeof(state)
 end
 
-function SirenSolutionData(merInt::AbstractSirenIntegrator)
-    keys = Tuple(merInt.save_vars)
-    values = Tuple(Vector{state_type(merInt, key)}() for key in keys)
+function SirenSolutionData(sirenInt::AbstractSirenIntegrator)
+    keys = Tuple(sirenInt.save_vars)
+    values = Tuple(Vector{state_type(sirenInt, key)}() for key in keys)
     return SirenSolutionData(keys, values)
 end
 

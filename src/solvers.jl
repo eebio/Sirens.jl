@@ -42,27 +42,27 @@ end
     return _min_next_time(Base.tail(integrators), timescales, i + 1, min_t)
 end
 
-@inline _apply_connectors!(::Tuple{}, merInt::AbstractSirenIntegrator) = nothing
-@inline function _apply_connectors!(connectors::Tuple, merInt::AbstractSirenIntegrator)
+@inline _apply_connectors!(::Tuple{}, sirenInt::AbstractSirenIntegrator) = nothing
+@inline function _apply_connectors!(connectors::Tuple, sirenInt::AbstractSirenIntegrator)
     conn = first(connectors)
-    if isexecutable(conn) && checkconnection(conn, merInt)
-        runconnection!(merInt, conn)
+    if isexecutable(conn) && checkconnection(conn, sirenInt)
+        runconnection!(sirenInt, conn)
     end
-    return _apply_connectors!(Base.tail(connectors), merInt)
+    return _apply_connectors!(Base.tail(connectors), sirenInt)
 end
 
-function CommonSolve.step!(merInt::SirenIntegrator, ::MinimumTimeStepper)
+function CommonSolve.step!(sirenInt::SirenIntegrator, ::MinimumTimeStepper)
     # Update the current time
-    min_t = _min_next_time(merInt.integrators, merInt.timescales, 1, Inf)
+    min_t = _min_next_time(sirenInt.integrators, sirenInt.timescales, 1, Inf)
     # Stop early if the user requested to save somewhere
-    if merInt.saveat isa AbstractVector && any(merInt.currtime .< merInt.saveat .< min_t)
-        min_t = first(merInt.saveat[merInt.saveat .> merInt.currtime])
+    if sirenInt.saveat isa AbstractVector && any(sirenInt.currtime .< sirenInt.saveat .< min_t)
+        min_t = first(sirenInt.saveat[sirenInt.saveat .> sirenInt.currtime])
     end
-    merInt.currtime = min_t
+    sirenInt.currtime = min_t
     # Apply connections
-    _apply_connectors!(merInt.connectors, merInt)
+    _apply_connectors!(sirenInt.connectors, sirenInt)
     # Step the integrator
-    _step_components!(merInt.integrators, merInt.timescales, 1, merInt.currtime)
+    _step_components!(sirenInt.integrators, sirenInt.timescales, 1, sirenInt.currtime)
     return nothing
 end
 
