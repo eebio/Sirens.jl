@@ -1,7 +1,3 @@
-using Test
-using Kroki
-using Mermaid
-
 @testsnippet example_problem begin
     atmosphere = TimeIndependentComponent("Atmosphere", identity, 0.0)
     ocean = TimeIndependentComponent("Ocean", identity, 0.0)
@@ -26,6 +22,8 @@ using Mermaid
 end
 
 @testitem "Kroki system diagrams" setup = [example_problem] begin
+    using Kroki
+    
     extension_module = Base.get_extension(Mermaid, :KrokiExt)
     @test !isnothing(extension_module)
 
