@@ -32,17 +32,17 @@
     model = StandardABM(
         Schelling,
         space;
-        (agent_step!) = schelling_step!, properties
+        (agent_step!)=schelling_step!, properties
     )
 
     for n in 1:300
-        add_agent_single!(model; group = n < 300 / 2 ? 1 : 2)
+        add_agent_single!(model; group=n < 300 / 2 ? 1 : 2)
     end
 
     c1 = AgentsComponent(model;
-        name = "Schelling",
-        state_names = OrderedDict("min_to_be_happy" => :min_to_be_happy),
-        timestep = 1.0
+        name="Schelling",
+        state_names=OrderedDict("min_to_be_happy" => :min_to_be_happy),
+        timestep=1.0
     )
 
     function f2(u, p, t)
@@ -53,44 +53,44 @@
     prob = ODEProblem(f2, u0, tspan)
     c2 = DEComponent(
         prob, Tsit5();
-        name = "ode",
-        timestep = 1.0,
-        state_names = OrderedDict("happy" => 1),
-        intkwargs = (:dt => 1.0,)
+        name="ode",
+        timestep=1.0,
+        state_names=OrderedDict("happy" => 1),
+        intkwargs=(; dt=1.0)
     )
 
     conn = Connector(
-        inputs = ["ode.happy"],
-        outputs = ["Schelling.min_to_be_happy"]
+        inputs=["ode.happy"],
+        outputs=["Schelling.min_to_be_happy"]
     )
 
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn], tspan = (0.0, 100.0))
+    sp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 100.0))
 
     alg = MinimumTimeStepper()
-    intMer = init(mp, alg)
-    solMer = solve!(intMer)
+    sirenInt = init(sp, alg)
+    sirenSol = solve!(sirenInt)
 
-    @test solMer["ode.happy"][1:(end - 1)] == solMer["Schelling.min_to_be_happy"][2:end]
+    @test sirenSol["ode.happy"][1:(end-1)] == sirenSol["Schelling.min_to_be_happy"][2:end]
 
-    intMer = init(mp, alg)
+    sirenInt = init(sp, alg)
     for _ in 1:10
-        step!(intMer)
+        step!(sirenInt)
     end
     # Early on, min_to_be_happy is high, so lots of agents moving
-    pos = [intMer.integrators[1].integrator[i].pos for i in 1:300]
-    step!(intMer)
-    pos2 = [intMer.integrators[1].integrator[i].pos for i in 1:300]
+    pos = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
+    step!(sirenInt)
+    pos2 = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
     @test any(pos != pos2)
     for _ in 1:35
-        step!(intMer)
+        step!(sirenInt)
     end
     # Later, min_to_be_happy is low, so agents aren't moving
-    pos3 = [intMer.integrators[1].integrator[i].pos for i in 1:300]
-    step!(intMer)
-    pos4 = [intMer.integrators[1].integrator[i].pos for i in 1:300]
+    pos3 = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
+    step!(sirenInt)
+    pos4 = [sirenInt.integrators[1].integrator[i].pos for i in 1:300]
     @test all(pos3 == pos4)
     # And all agents are happy
-    @test all([intMer.integrators[1].integrator[i].mood for i in 1:300])
+    @test all([sirenInt.integrators[1].integrator[i].mood for i in 1:300])
 end
 
 @testitem "state control" begin
@@ -125,27 +125,27 @@ end
     model = StandardABM(
         Schelling,
         space;
-        (agent_step!) = schelling_step!, properties
+        (agent_step!)=schelling_step!, properties
     )
 
     for n in 1:300
-        add_agent_single!(model; group = n < 300 / 2 ? 1 : 2)
+        add_agent_single!(model; group=n < 300 / 2 ? 1 : 2)
     end
 
     c1 = AgentsComponent(model;
-        name = "Schelling",
-        state_names = OrderedDict("min_to_be_happy" => :min_to_be_happy,
+        name="Schelling",
+        state_names=OrderedDict("min_to_be_happy" => :min_to_be_happy,
             "list_property" => :list_property, "mood" => :mood, "group" => :group),
-        timestep = 0.2
+        timestep=0.2
     )
 
     conn1 = Connector(
-        inputs = ["Schelling.min_to_be_happy"],
-        outputs = ["other.min_to_be_happy"]
+        inputs=["Schelling.min_to_be_happy"],
+        outputs=["other.min_to_be_happy"]
     )
     conn2 = Connector(
-        inputs = ["other.min_to_be_happy"],
-        outputs = ["Schelling.group[1:300]"]
+        inputs=["other.min_to_be_happy"],
+        outputs=["Schelling.group[1:300]"]
     )
 
     integrator = init(c1)
@@ -201,12 +201,12 @@ end
           [7, 8, 6]
 
     # getstate and setstate! for duplicated AgentsComponent
-    # abmtime is part of the state, not Mermaid's time control
+    # abmtime is part of the state, not Sirens' time control
     @test getstate(integrator) isa StandardABM
     @test gettime(integrator) ≈ 0.2
-    state = getstate(integrator; copy = true) # Get a copy of the state
+    state = getstate(integrator; copy=true) # Get a copy of the state
     state2 = getstate(integrator) # Default is don't copy, just return reference
-    state3 = getstate(integrator; copy = false)
+    state3 = getstate(integrator; copy=false)
     step!(integrator)
     @test abmtime(getstate(integrator))*timestep(integrator) ≈ 0.4
     setstate!(integrator, state)
@@ -223,7 +223,7 @@ end
 
     # Same thing but with the #model variable
     @test getstate(integrator, ConnectedVariable("Schelling.#model")) isa StandardABM
-    state = getstate(integrator, ConnectedVariable("Schelling.#model"); copy = true)
+    state = getstate(integrator, ConnectedVariable("Schelling.#model"); copy=true)
     step!(integrator)
     @test abmtime(getstate(integrator))*timestep(integrator) ≈ 0.8
     setstate!(integrator, ConnectedVariable("Schelling.#model"), state)
@@ -266,27 +266,27 @@ end
     model = StandardABM(
         Schelling,
         space;
-        (agent_step!) = schelling_step!, properties
+        (agent_step!)=schelling_step!, properties
     )
 
     for n in 1:300
-        add_agent_single!(model; group = n < 300 / 2 ? 1 : 2)
+        add_agent_single!(model; group=n < 300 / 2 ? 1 : 2)
     end
 
     c1 = AgentsComponent(model;
-        name = "Schelling",
-        state_names = OrderedDict("min_to_be_happy" => :min_to_be_happy,
+        name="Schelling",
+        state_names=OrderedDict("min_to_be_happy" => :min_to_be_happy,
             "list_property" => :list_property, "mood" => :mood, "group" => :group),
-        timestep = 0.2
+        timestep=0.2
     )
 
     conn1 = Connector(
-        inputs = ["Schelling.min_to_be_happy"],
-        outputs = ["other.min_to_be_happy"]
+        inputs=["Schelling.min_to_be_happy"],
+        outputs=["other.min_to_be_happy"]
     )
     conn2 = Connector(
-        inputs = ["other.min_to_be_happy"],
-        outputs = ["Schelling.group[1:300]"]
+        inputs=["other.min_to_be_happy"],
+        outputs=["Schelling.group[1:300]"]
     )
 
     integrator = init(c1)
@@ -342,12 +342,12 @@ end
           [7, 8, 6]
 
     # getstate and setstate! for duplicated AgentsComponent
-    # abmtime is part of the state, not Mermaid's time control
+    # abmtime is part of the state, not Sirens's time control
     @test getstate(integrator) isa StandardABM
     @test gettime(integrator) ≈ 0.2
-    state = getstate(integrator; copy = true) # Get a copy of the state
+    state = getstate(integrator; copy=true) # Get a copy of the state
     state2 = getstate(integrator) # Default is don't copy, just return reference
-    state3 = getstate(integrator; copy = false)
+    state3 = getstate(integrator; copy=false)
     step!(integrator)
     @test abmtime(getstate(integrator))*timestep(integrator) ≈ 0.4
     setstate!(integrator, state)
@@ -364,7 +364,7 @@ end
 
     # Same thing but with the #model variable
     @test getstate(integrator, ConnectedVariable("Schelling.#model")) isa StandardABM
-    state = getstate(integrator, ConnectedVariable("Schelling.#model"); copy = true)
+    state = getstate(integrator, ConnectedVariable("Schelling.#model"); copy=true)
     step!(integrator)
     @test abmtime(getstate(integrator))*timestep(integrator) ≈ 0.8
     setstate!(integrator, ConnectedVariable("Schelling.#model"), state)

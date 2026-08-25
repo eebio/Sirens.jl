@@ -1,4 +1,4 @@
 @testitem "Aqua" begin
     using Aqua
-    Aqua.test_all(Mermaid)
+    Aqua.test_all(Sirens)
 end

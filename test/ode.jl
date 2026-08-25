@@ -11,7 +11,7 @@
     u0 = [4.0, 2.0]
     tspan = (0.0, 0.1)
     prob = ODEProblem(f!, u0, tspan)
-    solODE = solve(prob, Euler(); adaptive = false, dt = 0.002)
+    solODE = solve(prob, Euler(); adaptive=false, dt=0.002)
 
     function f1!(du, u, p, t)
         x, y = u
@@ -27,50 +27,49 @@
     prob2 = ODEProblem(f2!, [u0[2], 4.0], tspan)
     c1 = DEComponent(
         prob1, Euler();
-        name = "Prey",
-        timestep = 0.002,
-        state_names = OrderedDict("prey" => 1, "predator" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        name="Prey",
+        timestep=0.002,
+        state_names=OrderedDict("prey" => 1, "predator" => 2),
+        intkwargs=(; adaptive=false, dt=0.002)
     )
 
     c2 = DEComponent(
         prob2, Euler();
-        name = "Predator",
-        timestep = 0.002,
-        state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        name="Predator",
+        timestep=0.002,
+        state_names=OrderedDict("predator" => 1, "prey" => 2),
+        intkwargs=(; adaptive=false, dt=0.002)
     )
 
     conn1 = Connector(
-        inputs = ["Predator.predator"],
-        outputs = ["Prey.predator"]
+        inputs=["Predator.predator"],
+        outputs=["Prey.predator"]
     )
     conn2 = Connector(
-        inputs = ["Prey.prey"],
-        outputs = ["Predator.prey"]
+        inputs=["Prey.prey"],
+        outputs=["Predator.prey"]
     )
 
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 0.1))
+    sp = SirenProblem(components=[c1, c2], connectors=[conn1, conn2], tspan=(0.0, 0.1))
 
     alg = MinimumTimeStepper()
-    solMer = solve(mp, alg)
+    sirenSol = solve(sp, alg)
 
-    @test all(solMer.t .≈ solODE.t)
-    preyODE = [solODE(t)[1] for t in solMer.t]
-    predatorODE = [solODE(t)[2] for t in solMer.t]
-    @test all(solMer["Prey.prey"] .≈ preyODE)
-    @test all(solMer["Predator.predator"] .≈ predatorODE)
+    @test all(sirenSol.t .≈ solODE.t)
+    preyODE = [solODE(t)[1] for t in sirenSol.t]
+    predatorODE = [solODE(t)[2] for t in sirenSol.t]
+    @test all(sirenSol["Prey.prey"] .≈ preyODE)
+    @test all(sirenSol["Predator.predator"] .≈ predatorODE)
 
     # If you don't specify algorithm, DE decides for you
     c2 = DEComponent(
         prob2;
-        name = "Predator",
-        timestep = 0.002,
-        state_names = OrderedDict("predator" => 1, "prey" => 2),
-        intkwargs = ()
+        name="Predator",
+        timestep=0.002,
+        state_names=OrderedDict("predator" => 1, "prey" => 2),
     )
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 10.0))
-    solve(mp, alg)
+    sp = SirenProblem(components=[c1, c2], connectors=[conn1, conn2], tspan=(0.0, 10.0))
+    solve(sp, alg)
 end
 
 @testitem "mtk" begin
@@ -80,60 +79,60 @@ end
 
     @variables x(t) [irreducible=true] y(t) [irreducible=true]
     eqs = [D(x) ~ x - x * y
-           D(y) ~ -y + x * y]
+        D(y) ~ -y + x * y]
     @mtkcompile lv = System(eqs, t)
     prob = ODEProblem(lv, [x => 4.0, y => 2.0], (0.0, 0.1))
 
-    solODE = solve(prob, Euler(); adaptive = false, dt = 0.002)
+    solODE = solve(prob, Euler(); adaptive=false, dt=0.002)
 
     eqs = [D(x) ~ x - x * y
-           D(y) ~ 0]
+        D(y) ~ 0]
     @mtkcompile lv1 = System(eqs, t)
     prob = ODEProblem(lv1, [x => 4.0, y => 2.0], (0.0, 0.1))
 
     c1 = DEComponent(
         prob, Euler();
-        name = "Prey",
-        timestep = 0.002,
-        state_names = OrderedDict("prey" => x, "predator" => y),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        name="Prey",
+        timestep=0.002,
+        state_names=OrderedDict("prey" => x, "predator" => y),
+        intkwargs=(; adaptive=false, dt=0.002)
     )
 
     eqs = [D(x) ~ 0
-           D(y) ~ -y + x * y]
+        D(y) ~ -y + x * y]
     @mtkcompile lv2 = System(eqs, t)
     prob = ODEProblem(lv2, [x => 4.0, y => 2.0], (0.0, 0.1))
 
     c2 = DEComponent(
         prob, Euler();
-        name = "Predator",
-        timestep = 0.002,
-        state_names = OrderedDict("prey" => x, "predator" => y),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        name="Predator",
+        timestep=0.002,
+        state_names=OrderedDict("prey" => x, "predator" => y),
+        intkwargs=(; adaptive=false, dt=0.002)
     )
 
     conn1 = Connector(
-        inputs = ["Predator.predator"],
-        outputs = ["Prey.predator"]
+        inputs=["Predator.predator"],
+        outputs=["Prey.predator"]
     )
     conn2 = Connector(
-        inputs = ["Prey.prey"],
-        outputs = ["Predator.prey"]
+        inputs=["Prey.prey"],
+        outputs=["Predator.prey"]
     )
 
-    mp = MermaidProblem(components = [c1, c2], connectors = [conn1, conn2], tspan = (0.0, 0.1))
+    sp = SirenProblem(components=[c1, c2], connectors=[conn1, conn2], tspan=(0.0, 0.1))
 
     using CommonSolve
     alg = MinimumTimeStepper()
     # Ensure the code is compiled
-    solMer = solve(mp, alg)
+    sirenSol = solve(sp, alg)
 
-    preyODE = [solODE(t; idxs = x) for t in solMer.t]
-    predatorODE = [solODE(t; idxs = y) for t in solMer.t]
+    preyODE = [solODE(t; idxs=x) for t in sirenSol.t]
+    predatorODE = [solODE(t; idxs=y) for t in sirenSol.t]
 
-    @test all(solMer.t .≈ solODE.t)
-    @test all(solMer["Prey.prey"] .≈ preyODE)
-    @test all(solMer["Predator.predator"] .≈ predatorODE)
+    @test all(sirenSol.t .≈ solODE.t)
+    @test all(sirenSol["Prey.prey"] .≈ preyODE)
+    @test all(sirenSol["Predator.predator"] .≈ predatorODE)
 end
 
 @testitem "state control" begin
@@ -151,18 +150,18 @@ end
 
     c1 = DEComponent(
         prob, Rodas5P();
-        name = "Lotka-Volterra",
-        timestep = 0.002,
-        state_names = OrderedDict("prey" => 1, "predator" => 2)
+        name="Lotka-Volterra",
+        timestep=0.002,
+        state_names=OrderedDict("prey" => 1, "predator" => 2)
     )
 
     conn1 = Connector(
-        inputs = ["Lotka-Volterra.predator"],
-        outputs = ["other.predator"]
+        inputs=["Lotka-Volterra.predator"],
+        outputs=["other.predator"]
     )
     conn2 = Connector(
-        inputs = ["other.prey"],
-        outputs = ["Lotka-Volterra.prey"]
+        inputs=["other.prey"],
+        outputs=["Lotka-Volterra.prey"]
     )
     integrator = init(c1)
 
@@ -238,13 +237,13 @@ end
     tspan = (0.0, 1.0)
 
     # Create DAE problem with index 1
-    prob = DAEProblem(f!, du0, u0, tspan, differential_vars = [true, false])
+    prob = DAEProblem(f!, du0, u0, tspan, differential_vars=[true, false])
 
     c1 = DEComponent(
         prob, DImplicitEuler();
-        name = "DAE_System",
-        timestep = 0.1,
-        state_names = OrderedDict("x" => 1, "y" => 2)
+        name="DAE_System",
+        timestep=0.1,
+        state_names=OrderedDict("x" => 1, "y" => 2)
     )
 
     integrator = init(c1)

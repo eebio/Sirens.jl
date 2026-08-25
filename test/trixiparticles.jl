@@ -56,13 +56,13 @@ SOFTWARE.
 
     fluid_density = 1000.0
     sound_speed = 10.0
-    state_equation = StateEquationCole(; sound_speed, reference_density = fluid_density,
-        exponent = 7, clip_negative_pressure = false)
+    state_equation = StateEquationCole(; sound_speed, reference_density=fluid_density,
+        exponent=7, clip_negative_pressure=false)
 
     tank = RectangularTank(
         fluid_particle_spacing, initial_fluid_size, tank_size, fluid_density,
-        n_layers = boundary_layers, acceleration = (0.0, -gravity),
-        state_equation = state_equation)
+        n_layers=boundary_layers, acceleration=(0.0, -gravity),
+        state_equation=state_equation)
 
     # ==========================================================================================
     # ==== Fluid
@@ -70,17 +70,17 @@ SOFTWARE.
     smoothing_kernel = SchoenbergCubicSplineKernel{2}()
 
     alpha = 0.02
-    viscosity_fluid = ArtificialViscosityMonaghan(alpha = alpha, beta = 0.0)
+    viscosity_fluid = ArtificialViscosityMonaghan(alpha=alpha, beta=0.0)
 
     fluid_density_calculator = ContinuityDensity()
 
     # This is to set acceleration with `trixi_include`
     system_acceleration = (0.0, -gravity)
-    fluid_system = WeaklyCompressibleSPHSystem(tank.fluid; density_calculator = fluid_density_calculator,
-        state_equation = state_equation, smoothing_kernel = smoothing_kernel,
-        smoothing_length = smoothing_length, viscosity = viscosity_fluid,
-        acceleration = system_acceleration,
-        source_terms = nothing)
+    fluid_system = WeaklyCompressibleSPHSystem(tank.fluid; density_calculator=fluid_density_calculator,
+        state_equation=state_equation, smoothing_kernel=smoothing_kernel,
+        smoothing_length=smoothing_length, viscosity=viscosity_fluid,
+        acceleration=system_acceleration,
+        source_terms=nothing)
 
     # ==========================================================================================
     # ==== Boundary
@@ -91,33 +91,33 @@ SOFTWARE.
     # This is to set wall viscosity with `trixi_include`
     viscosity_wall = nothing
     boundary_model = BoundaryModelDummyParticles(tank.boundary.density, tank.boundary.mass,
-        state_equation = state_equation,
+        state_equation=state_equation,
         boundary_density_calculator,
         smoothing_kernel, smoothing_length,
-        viscosity = viscosity_wall)
+        viscosity=viscosity_wall)
     boundary_system = WallBoundarySystem(tank.boundary, boundary_model,
-        prescribed_motion = nothing)
+        prescribed_motion=nothing)
 
     # ==========================================================================================
     # ==== Simulation
     semi = Semidiscretization(fluid_system, boundary_system,
-        parallelization_backend = PolyesterBackend())
+        parallelization_backend=PolyesterBackend())
     ode = semidiscretize(semi, tspan)
 
     # Use a Runge-Kutta method with automatic (error based) time step size control
-    sol_trixi = solve(ode, RDPK3SpFSAL35(); saveat = 0.002, tstops = 0.002:0.002:tspan[2])
+    sol_trixi = solve(ode, RDPK3SpFSAL35(); saveat=0.002, tstops=0.002:0.002:tspan[2])
 end
 
 @testitem "single trixi particles sim" setup = [trixisim] begin
     using TrixiParticles
     using OrdinaryDiffEq
-    using Mermaid
+    using Sirens
 
-    comp = TrixiParticlesComponent(semi, RDPK3SpFSAL35(); name = "TrixiParticles Component", timestep = 0.002)
-    mp = MermaidProblem(components = [comp], connectors = [], tspan = tspan)
+    comp = TrixiParticlesComponent(semi, RDPK3SpFSAL35(); name="TrixiParticles Component", timestep=0.002)
+    sp = SirenProblem(components=[comp], connectors=[], tspan=tspan)
     alg = MinimumTimeStepper()
-    sol_mermaid = solve(mp, alg; save_vars = ["TrixiParticles Component.#state"])
-    a = [sol_mermaid(i)["TrixiParticles Component.#state"] for i in 0:0.1:tspan[2]]
+    sol_siren = solve(sp, alg; save_vars=["TrixiParticles Component.#state"])
+    a = [sol_siren(i)["TrixiParticles Component.#state"] for i in 0:0.1:tspan[2]]
     b = [sol_trixi(i) for i in 0:0.1:tspan[2]]
     @test a ≈ b
 end
@@ -127,9 +127,9 @@ end
     using OrdinaryDiffEq
     using OrdinaryDiffEqLowOrderRK
     using OrdinaryDiffEqLowStorageRK
-    using Mermaid
+    using Sirens
 
-    comp = TrixiParticlesComponent(semi, RDPK3SpFSAL35(); name = "TrixiParticles Component", timestep = 0.002)
+    comp = TrixiParticlesComponent(semi, RDPK3SpFSAL35(); name="TrixiParticles Component", timestep=0.002)
 
     function f1!(du, u, p, t)
         x, y = u
@@ -139,10 +139,10 @@ end
     prob1 = ODEProblem(f1!, [0.0, 0.0], tspan)
     comp2 = DEComponent(
         prob1, Euler();
-        name = "ODE",
-        timestep = 0.002,
-        state_names = OrderedDict("integral" => 1, "pressure" => 2),
-        intkwargs = (:adaptive => false, :dt => 0.002)
+        name="ODE",
+        timestep=0.002,
+        state_names=OrderedDict("integral" => 1, "pressure" => 2),
+        intkwargs=(; adaptive=false, dt=0.002)
     )
 
     function pressure_interpolation(state, semi)
@@ -152,16 +152,16 @@ end
     end
 
     conn = Connector(
-        inputs = ["TrixiParticles Component.#state", "TrixiParticles Component.#semi"],
-        outputs = ["ODE.pressure"],
-        func = pressure_interpolation
+        inputs=["TrixiParticles Component.#state", "TrixiParticles Component.#semi"],
+        outputs=["ODE.pressure"],
+        func=pressure_interpolation
     )
 
-    mp = MermaidProblem(components = [comp, comp2], connectors = [conn], tspan = tspan)
+    sp = SirenProblem(components=[comp, comp2], connectors=[conn], tspan=tspan)
     alg = MinimumTimeStepper()
-    sol_mermaid = solve(mp, alg; save_vars = ["TrixiParticles Component.#state"])
+    sol_siren = solve(sp, alg; save_vars=["TrixiParticles Component.#state"])
 
-    int = init(mp, alg)
+    int = init(sp, alg)
     @test getstate(int, ConnectedVariable("ODE.pressure")) == 0.0
     @test getstate(int, ConnectedVariable("ODE.integral")) == 0.0
     step!(int)
@@ -175,8 +175,8 @@ end
     using OrdinaryDiffEqLowStorageRK
 
     comp = TrixiParticlesComponent(
-        semi, RDPK3SpFSAL35(); name = "TrixiParticles Component", timestep = 0.002,
-        state_names = Dict("particle1velx" => 1, "particle1vely" => 2))
+        semi, RDPK3SpFSAL35(); name="TrixiParticles Component", timestep=0.002,
+        state_names=Dict("particle1velx" => 1, "particle1vely" => 2))
     int = init(comp)
     @test gettime(int) == 0.0
     step!(int)
@@ -204,7 +204,7 @@ end
 
     # Test special variable #integrator
     @test "#integrator" in variables(int)
-    integrator_copy = getstate(int, ConnectedVariable("TrixiParticles Component.#integrator"); copy = true)
+    integrator_copy = getstate(int, ConnectedVariable("TrixiParticles Component.#integrator"); copy=true)
     @test typeof(integrator_copy) <: SciMLBase.DEIntegrator
     @test typeof(integrator_copy.u) == typeof(getstate(int))
     state_before_step = copy(getstate(int))

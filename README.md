@@ -1,11 +1,11 @@
-# Mermaid.jl
+# Sirens.jl
 
-![Mermaid.jl logo](https://raw.githubusercontent.com/eebio/Mermaid.jl/refs/heads/main/docs/src/assets/logo-full.svg)
+![Sirens.jl logo](https://raw.githubusercontent.com/eebio/Sirens.jl/refs/heads/main/docs/src/assets/logo-full.svg)
 
-[![Run tests](https://github.com/eebio/Mermaid.jl/actions/workflows/test.yml/badge.svg)](https://github.com/eebio/Mermaid.jl/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/eebio/Mermaid.jl/graph/badge.svg?token=XRLUZB8FQS)](https://codecov.io/gh/eebio/Mermaid.jl)
+[![Run tests](https://github.com/eebio/Sirens.jl/actions/workflows/test.yml/badge.svg)](https://github.com/eebio/Sirens.jl/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/eebio/Sirens.jl/graph/badge.svg?token=XRLUZB8FQS)](https://codecov.io/gh/eebio/Sirens.jl)
 
-Mermaid.jl is a hybrid and multiscale simulation environment in Julia.
+Sirens.jl is a hybrid and multiscale simulation environment in Julia.
 
 Complex simulations can be produced by connecting together components from a wide range of Julia modeling tools.
 
@@ -18,12 +18,12 @@ Its key features are:
 
 ## Getting started
 
-Mermaid can be installed from Julia with:
+Sirens can be installed from Julia with:
 
 ```julia
-using Pkg; Pkg.add("Mermaid")
+using Pkg; Pkg.add("Sirens")
 ```
 
-We have a begginer friendly [tutorial](https://eebio.github.io/Mermaid.jl/dev/tutorial/), and guided examples for different features in Mermaid available in the [docs](https://eebio.github.io/Mermaid.jl/dev/).
+We have a begginer friendly [tutorial](https://eebio.github.io/Sirens.jl/dev/tutorial/), and guided examples for different features in Sirens available in the [docs](https://eebio.github.io/Sirens.jl/dev/).
 
-We also have a few more complex, unguided examples in the [examples directory](https://github.com/eebio/Mermaid.jl/tree/main/examples).
+We also have a few more complex, unguided examples in the [examples directory](https://github.com/eebio/Sirens.jl/tree/main/examples).

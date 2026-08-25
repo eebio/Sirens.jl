@@ -1,13 +1,13 @@
-# Mermaid Interface
+# Sirens Interface
 
 In this section, we will:
 
-* See the integrator interface that Mermaid uses,
+* See the integrator interface that Sirens uses,
 * Find out how this fits with [CommonSolve](@extref CommonSolve index).
 
 ## Interface requirements
 
-The interface used in Mermaid is compatible with, and uses, the SciML [CommonSolve](@extref CommonSolve index) interface.
+The interface used in Sirens is compatible with, and uses, the SciML [CommonSolve](@extref CommonSolve index) interface.
 In particular, each Component is some immutable problem type that stores required data to solve a Component (for example, an [ODEProblem](@extref DiffEq types/ode_types)).
 We then also have an Integrator for each Component which stores the current state and handles solving over time.
 
@@ -32,7 +32,7 @@ It only stores the current state of that component, and has some associated func
 
 ## Functions
 
-Most of the interface for Mermaid is built around functions that manipulate the integrator state.
+Most of the interface for Sirens is built around functions that manipulate the integrator state.
 
 ### `step!`
 
@@ -82,7 +82,7 @@ If the `ComponentIntegrator` has a field/property for the `Component` called `co
 
 ## Variable Names
 
-Mermaid has its own interface for connections too.
+Sirens has its own interface for connections too.
 A [Connector](@ref) uses instances of [ConnectedVariables](@ref ConnectedVariable) as part of applying the connections.
 If you want to write your own components, it is worth learning how the [ConnectedVariables](@ref ConnectedVariable) are defined.
 

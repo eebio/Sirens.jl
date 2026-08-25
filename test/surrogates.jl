@@ -3,7 +3,7 @@
     using Flux
     using Surrogates
     using Random
-    using Mermaid
+    using Sirens
     Random.seed!(0)
     # Define a simple ODE: dx/dt = -x, x(0) = 1
     f(u, p, t) = -u
@@ -11,7 +11,7 @@
     tspan = (0.0, 1.0)
     prob = ODEProblem(f, u0, tspan)
     state_names = OrderedDict("x" => 1)
-    ode_comp = Mermaid.DEComponent(
+    ode_comp = Sirens.DEComponent(
         prob, Rodas5P(); name = "decay", state_names = state_names, timestep = 0.1)
 
     # Set bounds for surrogate sampling

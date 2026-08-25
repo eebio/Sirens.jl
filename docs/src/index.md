@@ -1,9 +1,9 @@
-# Mermaid.jl
+# Sirens.jl
 
 ```@meta
-CurrentModule = Mermaid
+CurrentModule = Sirens
 ```
 
 ```@docs
-Mermaid
+Sirens
 ```

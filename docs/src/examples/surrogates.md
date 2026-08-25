@@ -4,13 +4,13 @@ Sometimes, a model can be very expensive to solve.
 In other instances, we may be required to solve the same model many times, such as with [Duplicated Components](@ref "Advanced Duplicated Components").
 In these instances, it can be useful to generate a surrogate machine learning model which approximates the output, and can do it faster than model solving.
 
-Surrogates of components can be generated in Mermaid.
+Surrogates of components can be generated in Sirens.
 The component will train a surrogate to learn the `step!` function.
 
 ## Building a surrogate component
 
 ```@example surrogates
-using OrdinaryDiffEq, Random, Mermaid, BenchmarkTools, Plots
+using OrdinaryDiffEq, Random, Sirens, BenchmarkTools, Plots
 using Surrogates
 using CellMLToolkit
 
@@ -30,7 +30,7 @@ prob[Ki] = 144.0
 
 comp1 = DEComponent(prob, Tsit5();
     name = "cell", timestep = 1000.0, state_names = Dict("v" => V, "ki" => Ki),
-    intkwargs = (abstol = 1e-10, reltol = 1e-10, save_everystep = false, maxiters = Inf)
+    intkwargs = (;abstol = 1e-10, reltol = 1e-10, save_everystep = false, maxiters = Inf)
 )
 
 lb = prob.u0 - 0.01*abs.(prob.u0)
@@ -56,12 +56,12 @@ In this section, we will compare how our surrogate performs compared with solvin
 alg = MinimumTimeStepper()
 
 # Benchmark the original component
-mp1 = MermaidProblem(components = [comp1], connectors = Connector[], tspan = (0,longtime))
+mp1 = SirenProblem(components = [comp1], connectors = Connector[], tspan = (0,longtime))
 ori_int = init(mp1, alg; save_vars = ["cell.v", "cell.ki"])
 original_time = @benchmark solve!(int) setup = (int = deepcopy(ori_int))
 
 # Benchmark the surrogate component
-mp2 = MermaidProblem(components = [surrogate_comp], connectors = Connector[], tspan = (0,longtime))
+mp2 = SirenProblem(components = [surrogate_comp], connectors = Connector[], tspan = (0,longtime))
 surr_int = init(mp2, alg; save_vars = ["cell.v", "cell.ki"])
 surrogate_time = @benchmark solve!(int) setup = (int = deepcopy(surr_int))
 
