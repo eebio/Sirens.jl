@@ -1,9 +1,9 @@
 module KrokiExt
 
 using Kroki
-using Mermaid
+using Sirens
 
-import Mermaid: systemdiagram
+import Sirens: systemdiagram
 
 # Options and Graphviz styles
 
@@ -25,13 +25,13 @@ function _validate_option(value::Symbol, supported, name)
     throw(ArgumentError("unsupported $name=$(repr(value)); expected one of $choices"))
 end
 
-# Mermaid topology inspection
+# Siren topology inspection
 # Diagram generation is structural: never initialize components or execute connectors.
 
 _component_name(component) = string(name(component))
 
 # First appearance defines stable port IDs without sorting user-authored names.
-function _ordered_endpoints(problem::MermaidProblem)
+function _ordered_endpoints(problem::SirenProblem)
     ordered = ConnectedVariable[]
     seen = Set{String}()
     for connector in problem.connectors
@@ -48,7 +48,7 @@ function _ordered_endpoints(problem::MermaidProblem)
     return ordered
 end
 
-function _unresolved_components(problem::MermaidProblem, endpoints)
+function _unresolved_components(problem::SirenProblem, endpoints)
     known = Set(_component_name(component) for component in problem.components)
     unresolved = String[]
     seen = Set{String}()
@@ -182,7 +182,7 @@ end
 
 # Assembly and public API
 
-function _graphviz_source(problem::MermaidProblem, detail, direction)
+function _graphviz_source(problem::SirenProblem, detail, direction)
     endpoints = _ordered_endpoints(problem)
     unresolved = _unresolved_components(problem, endpoints)
     # Ordinal IDs make output stable and keep user-authored names confined to escaped labels.
@@ -193,7 +193,7 @@ function _graphviz_source(problem::MermaidProblem, detail, direction)
         component => "unresolved_$index" for (index, component) in enumerate(unresolved))
 
     return sprint() do io
-        println(io, "digraph MermaidSystem {")
+        println(io, "digraph SirenSystem {")
         println(io,
             "    graph [rankdir=$direction, bgcolor=\"white\", fontname=\"Helvetica\"]")
         println(io, "    node [fontname=\"Helvetica\"]")
@@ -208,7 +208,7 @@ function _graphviz_source(problem::MermaidProblem, detail, direction)
 end
 
 function systemdiagram(
-        problem::MermaidProblem; detail::Symbol = :ports, direction::Symbol = :LR)
+        problem::SirenProblem; detail::Symbol = :ports, direction::Symbol = :LR)
     _validate_option(detail, _DETAILS, :detail)
     _validate_option(direction, _DIRECTIONS, :direction)
     return Kroki.Diagram(:graphviz, _graphviz_source(problem, detail, direction))

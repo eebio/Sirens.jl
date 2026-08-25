@@ -111,20 +111,20 @@ Initialises an integrator ([AbstractComponentIntegrator](@ref))
 function init(::AbstractComponent) end
 
 """
-    systemdiagram(problem::MermaidProblem; detail=:ports, direction=:LR)
+    systemdiagram(problem::AbstractSirenProblem; detail=:ports, direction=:LR)
 
-Create a system-topology diagram for a Mermaid problem.
+Create a system-topology diagram for a Siren problem.
 
 This method is provided by an optional visualization extension. Loading Kroki.jl enables
-the `MermaidProblem` method without adding rendering dependencies to Mermaid's core. The
+the `SirenProblem` method without adding rendering dependencies to Siren's core. The
 extension returns a Graphviz-backed `Kroki.Diagram`.
 
 The supported detail levels are `:components` and `:ports`; supported directions are `:LR`
 and `:TB`. Creating the diagram is local and does not render it or contact a remote service.
 """
-function systemdiagram(problem::AbstractMermaidProblem; kwargs...)
+function systemdiagram(problem::AbstractSirenProblem; kwargs...)
     throw(ArgumentError(
-        "no systemdiagram method for $(typeof(problem)); loading Kroki.jl enables MermaidProblem diagrams"))
+        "no systemdiagram method for $(typeof(problem)); loading Kroki.jl enables SirenProblem diagrams"))
 end
 
 end

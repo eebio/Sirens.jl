@@ -13,7 +13,7 @@
         outputs=["Ocean.albedo"]
     )
 
-    example_problem = MermaidProblem(
+    example_problem = SirenProblem(
         components=[atmosphere, ocean, biosphere],
         connectors=[heat, feedback],
         tspan=(0.0, 10.0),
@@ -23,8 +23,8 @@ end
 
 @testitem "Kroki system diagrams" setup = [example_problem] begin
     using Kroki
-    
-    extension_module = Base.get_extension(Mermaid, :KrokiExt)
+
+    extension_module = Base.get_extension(Sirens, :KrokiExt)
     @test !isnothing(extension_module)
 
     problem = example_problem
@@ -34,7 +34,7 @@ end
     @test ports isa Kroki.Diagram
     @test ports.type == :graphviz
     @test ports.specification == systemdiagram(problem).specification
-    @test startswith(ports.specification, "digraph MermaidSystem {\n")
+    @test startswith(ports.specification, "digraph SirenSystem {\n")
     @test occursin("graph [rankdir=LR, bgcolor=\"white\"", ports.specification)
     @test occursin("subgraph cluster_component_1", ports.specification)
     @test occursin("connector_1 [label=\"Connector 1\\ntransform\"", ports.specification)
@@ -54,7 +54,7 @@ end
     @test_throws ArgumentError systemdiagram(problem; direction = :diagonal)
 
     unusual = TimeIndependentComponent("A \" B & C", identity, 0.0)
-    unresolved = MermaidProblem(
+    unresolved = SirenProblem(
         components = [unusual],
         connectors = [Connector(
             inputs = ["Missing.value"], outputs = ["A \" B & C.value"])],
@@ -66,7 +66,7 @@ end
     @test occursin("port_1 [label=\"unresolved: Missing.value\"", unresolved_source)
 
     opaque = TimeIndependentComponent("Opaque", _ -> error("must not initialize"), 0.0)
-    opaque_problem = MermaidProblem(
+    opaque_problem = SirenProblem(
         components = [opaque], connectors = [], tspan = (0.0, 1.0))
     @test_nowarn systemdiagram(opaque_problem)
 end
