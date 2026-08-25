@@ -1,5 +1,5 @@
 @testitem "jump" begin
-    using OrdinaryDiffEq, JumpProcesses
+    using OrdinaryDiffEq, JumpProcesses, DiffEqBase
 
     β = 0.1 / 1000.0
     ν = 0.01
@@ -133,7 +133,7 @@ end
 @testitem "state control" begin
     using Random
     Random.seed!(1234)
-    using OrdinaryDiffEq, JumpProcesses
+    using OrdinaryDiffEq, JumpProcesses, DiffEqBase
 
     β = 0.1 / 1000.0
     ν = 0.01
