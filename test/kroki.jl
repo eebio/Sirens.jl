@@ -2,13 +2,34 @@ using Test
 using Kroki
 using Mermaid
 
-include("example.jl")
+@testsnippet example_problem begin
+    atmosphere = TimeIndependentComponent("Atmosphere", identity, 0.0)
+    ocean = TimeIndependentComponent("Ocean", identity, 0.0)
+    biosphere = TimeIndependentComponent("Biosphere", identity, 0.0)
 
-@testset "Kroki system diagrams" begin
+    heat = Connector(
+        inputs=["Atmosphere.temperature", "Ocean.surface_temperature"],
+        outputs=["Biosphere.temperature"],
+        func=(air, sea) -> (air + sea) / 2
+    )
+    feedback = ImplicitConnector(
+        inputs=["Biosphere.temperature"],
+        outputs=["Ocean.albedo"]
+    )
+
+    example_problem = MermaidProblem(
+        components=[atmosphere, ocean, biosphere],
+        connectors=[heat, feedback],
+        tspan=(0.0, 10.0),
+        timescales=[1.0, 0.1, 1.0]
+    )
+end
+
+@testitem "Kroki system diagrams" setup = [example_problem] begin
     extension_module = Base.get_extension(Mermaid, :KrokiExt)
     @test !isnothing(extension_module)
 
-    problem = example_problem()
+    problem = example_problem
     ports = systemdiagram(problem)
     components = systemdiagram(problem; detail = :components, direction = :TB)
 
