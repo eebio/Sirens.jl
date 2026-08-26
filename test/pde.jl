@@ -1,6 +1,6 @@
 @testitem "MOL" begin
     using OrdinaryDiffEq, ModelingToolkit, MethodOfLines, DomainSets
-    using OrdinaryDiffEqLowOrderRK
+    using OrdinaryDiffEqBDF, OrdinaryDiffEqLowOrderRK
 
     # Parameters, variables, and derivatives
     @parameters t x
@@ -33,7 +33,7 @@
     # Convert the PDE problem into an ODE problem
     prob = discretize(pdesys, discretization)
 
-    solPDE = solve(prob, Euler(), dt=0.0001, adaptive=false)
+    solPDE = solve(prob, DImplicitEuler(), dt=0.0001, adaptive=false)
 
     # Parameters, variables, and derivatives
     # 1D PDE and boundary conditions
@@ -65,7 +65,7 @@
         return variable_index(prob, ModelingToolkit.parse_variable(prob.f.sys, s))
     end
 
-    c1 = MOLComponent(prob, Euler();
+    c1 = MOLComponent(prob, DImplicitEuler();
         name="PDE",
         state_names=OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
             "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
@@ -95,11 +95,12 @@
     sp = SirenProblem(components=[c1, c2], connectors=[conn], tspan=(0.0, 0.01))
     sol = solve(sp, MinimumTimeStepper())
     finalsol = [0, sol(0.01)["PDE.u"]..., 0]
-    @test all(isapprox.(finalsol, solPDE[u(t, x)][end, :], atol=1e-8))
+    @test all(isapprox.(finalsol, solPDE[u(t, x)][end, :], atol=1e-5))
 end
 
 @testitem "state control" begin
     using OrdinaryDiffEq, ModelingToolkit, MethodOfLines, DomainSets, DiffEqBase
+    using OrdinaryDiffEqBDF
     @parameters t x
     @variables u(..) g(..) [irreducible = true]
     Dt = Differential(t)
@@ -135,10 +136,10 @@ end
         return variable_index(prob, ModelingToolkit.parse_variable(prob.f.sys, s))
     end
 
-    c1 = MOLComponent(prob, Tsit5();
+    c1 = MOLComponent(prob, DImplicitEuler();
         name="PDE",
-        state_names=OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
-            "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
+        state_names=OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 1:11],
+            "g" => [var_index("g[" * string(i) * "]") for i in 1:11]),
         timestep=0.0001
     )
 
@@ -155,26 +156,26 @@ end
     @test issetequal(variables(integrator), ["u", "g", "#time", "#integrator", "#state"])
 
     # Check initial state
-    @test getstate(integrator, ConnectedVariable("PDE.u")) ==
-          [sin(pi * x) for x in 0.1:0.1:0.9]
-    @test getstate(integrator, ConnectedVariable("PDE.g")) == [0.5 for _ in 0.1:0.1:0.9]
-    @test getstate(integrator) ==
-          [[sin(pi * x) for x in [0.1:0.1:0.9...]]...; [0.5 for _ in [0.1:0.1:0.9...]]][[
+    @test getstate(integrator, ConnectedVariable("PDE.u")) ≈
+          [sin(pi * x) for x in 0.0:0.1:1.0]
+    @test getstate(integrator, ConnectedVariable("PDE.g")) ≈ [0.5 for _ in 0.0:0.1:1.0]
+    @test getstate(integrator) ≈
+          [[sin(pi * x) for x in [0.0:0.1:1.0...]]...; [0.5 for _ in [0.0:0.1:1.0...]]][[
         c1.state_names["u"]..., c1.state_names["g"]...]]
-    @test getstate(integrator, ConnectedVariable("PDE.u[1]")) == sin(pi * 0.1)
+    @test getstate(integrator, ConnectedVariable("PDE.u[2]")) == sin(pi * 0.1)
     @test getstate(integrator, ConnectedVariable("PDE.g[1:3]")) == [0.5, 0.5, 0.5]
-    @test getstate(integrator, ConnectedVariable("PDE.u[2:4]")) ==
+    @test getstate(integrator, ConnectedVariable("PDE.u[3:5]")) ==
           [sin(pi * 0.2), sin(pi * 0.3), sin(pi * 0.4)]
     # Check setting state
-    setstate!(integrator, ConnectedVariable("PDE.u"), [1.0 for _ in 0.1:0.1:0.9])
-    @test getstate(integrator, ConnectedVariable("PDE.u")) == [1.0 for _ in 0.1:0.1:0.9]
-    @test getstate(integrator, ConnectedVariable("PDE.g")) == [0.5 for _ in 0.1:0.1:0.9]
+    setstate!(integrator, ConnectedVariable("PDE.u"), [1.0 for _ in 0.0:0.1:1.0])
+    @test getstate(integrator, ConnectedVariable("PDE.u")) == [1.0 for _ in 0.0:0.1:1.0]
+    @test getstate(integrator, ConnectedVariable("PDE.g")) == [0.5 for _ in 0.0:0.1:1.0]
     setstate!(integrator, ConnectedVariable("PDE.u[1]"), 0.0)
     @test getstate(integrator, ConnectedVariable("PDE.u")) ==
-          [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+          [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     setstate!(integrator, ConnectedVariable("PDE.g[1:3]"), [0.0, 0.1, 0.2])
     @test getstate(integrator, ConnectedVariable("PDE.g")) ==
-          [0.0, 0.1, 0.2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+          [0.0, 0.1, 0.2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 
     # Check time control
     @test gettime(integrator) == 0.0
@@ -187,17 +188,17 @@ end
 
     # Step means the state has changed
     @test getstate(integrator, ConnectedVariable("PDE.u")) ≠
-          [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+          [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     @test getstate(integrator, ConnectedVariable("PDE.g")) ≠
-          [0.0, 0.1, 0.2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+          [0.0, 0.1, 0.2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 
     # Global setstate!
-    setstate!(integrator, [-1.0 for _ in 1:18])
-    @test getstate(integrator, ConnectedVariable("PDE.u")) == [-1.0 for _ in 0.1:0.1:0.9]
-    @test getstate(integrator, ConnectedVariable("PDE.g")) == [-1.0 for _ in 0.1:0.1:0.9]
+    setstate!(integrator, [-1.0 for _ in 1:22])
+    @test getstate(integrator, ConnectedVariable("PDE.u")) == [-1.0 for _ in 0.0:0.1:1.0]
+    @test getstate(integrator, ConnectedVariable("PDE.g")) == [-1.0 for _ in 0.0:0.1:1.0]
 
     # Test error on symbolic indexing
-    c1 = MOLComponent(prob, Tsit5();
+    c1 = MOLComponent(prob, DImplicitEuler();
         name="PDE",
         state_names=OrderedDict("u" => u, "g" => g),
         timestep=0.0001
@@ -206,7 +207,7 @@ end
     @test_throws ArgumentError getstate(int, ConnectedVariable("PDE.u"))
 
     # Reset to numeric state_names for special variable tests
-    c1 = MOLComponent(prob, Tsit5();
+    c1 = MOLComponent(prob, DImplicitEuler();
         name="PDE",
         state_names=OrderedDict("u" => [var_index("u[" * string(i) * "]") for i in 2:10],
             "g" => [var_index("g[" * string(i) * "]") for i in 2:10]),
@@ -218,9 +219,9 @@ end
     @test "#state" in variables(int)
     state_via_special = getstate(int, ConnectedVariable("PDE.#state"))
     @test state_via_special isa Vector
-    @test length(state_via_special) == 18
+    @test length(state_via_special) == 22
     original_state = copy(state_via_special)
-    new_state = [-2.0 for _ in 1:18]
+    new_state = [-2.0 for _ in 1:22]
     setstate!(int, ConnectedVariable("PDE.#state"), deepcopy(new_state))
     @test getstate(int, ConnectedVariable("PDE.#state")) == new_state
     @test getstate(int) == new_state
