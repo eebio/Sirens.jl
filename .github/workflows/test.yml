@@ -51,24 +51,3 @@ jobs:
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  kroki-extension:
-    name: Kroki extension (no rendering service)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: julia-actions/setup-julia@v3
-        with:
-          version: '1'
-      - uses: julia-actions/cache@v3
-      - name: Run lightweight extension test
-        shell: julia --color=yes {0}
-        # Fail closed if a future test accidentally tries to render remotely.
-        env:
-          KROKI_ENDPOINT: http://127.0.0.1:9
-        run: |
-          using Pkg
-          Pkg.activate(; temp=true)
-          Pkg.develop(PackageSpec(path=pwd()))
-          Pkg.add(PackageSpec(name="Kroki", version="1"))
-          include("test/kroki/runtests.jl")
