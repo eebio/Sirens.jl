@@ -65,6 +65,9 @@ end
     @test occursin("unresolved: Missing.value", unresolved_source)
     @test occursin("port_1 [label=\"unresolved: Missing.value\"", unresolved_source)
 
+    unresolved_source = systemdiagram(unresolved; detail = :components).specification
+    @test occursin("unresolved: Missing\"", unresolved_source)
+
     opaque = TimeIndependentComponent("Opaque", _ -> error("must not initialize"), 0.0)
     opaque_problem = SirenProblem(
         components = [opaque], connectors = [], tspan = (0.0, 1.0))

@@ -13,3 +13,10 @@ end
     a = A()
     init(a)
 end
+
+@testitem "systemdiagram" begin
+    struct A <: AbstractSirenProblem
+    end
+    a = A()
+    @test_throws ErrorException systemdiagram(a; extra_kwarg_to_avoid_kroki_ext = true)
+end
