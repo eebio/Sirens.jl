@@ -16,6 +16,7 @@ PAGES = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
     "Examples" => [
+        "System diagrams" => "examples/system_diagrams.md",
         "examples/duplicated_components.md",
         "examples/advanced_duplicated_components.md",
         "examples/surrogates.md",

@@ -172,6 +172,12 @@ DuplicatedComponentIntegrator
 TimeIndependentComponent
 ```
 
+## Visualisation
+
+```@docs
+systemdiagram
+```
+
 ## Abstract Types
 
 These abstract types are extension points and are useful for method signatures:
