@@ -127,8 +127,7 @@ Create a system-topology diagram for a Siren problem. Requires loading a support
     options include :TB (top to bottom).
 """
 function systemdiagram(problem::AbstractSirenProblem; kwargs...)
-    throw(ArgumentError(
-        "no systemdiagram method for $(typeof(problem)); loading Kroki.jl enables SirenProblem diagrams"))
+    error("no systemdiagram method for $(typeof(problem)); loading Kroki.jl enables SirenProblem diagrams")
 end
 
 end
