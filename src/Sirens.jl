@@ -113,14 +113,18 @@ function init(::AbstractComponent) end
 """
     systemdiagram(problem::AbstractSirenProblem; detail=:ports, direction=:LR)
 
-Create a system-topology diagram for a Siren problem.
+Create a system-topology diagram for a Siren problem. Requires loading a supported graphical
+    backend such as Kroki.jl.
 
-This method is provided by an optional visualization extension. Loading Kroki.jl enables
-the `SirenProblem` method without adding rendering dependencies to Siren's core. The
-extension returns a Graphviz-backed `Kroki.Diagram`.
+# Arguments
+- `problem::AbstractSirenProblem`: The Siren problem for which to create a diagram.
 
-The supported detail levels are `:components` and `:ports`; supported directions are `:LR`
-and `:TB`. Creating the diagram is local and does not render it or contact a remote service.
+# Keyword Arguments
+- `detail::Symbol`: Detail level for the diagram. Defaults to :ports (connections between
+    variables). Other options include :components (connections between components, ignoring
+    specific variables).
+- `direction::Symbol`: Direction of the diagram. Defaults to :LR (left to right). Other
+    options include :TB (top to bottom).
 """
 function systemdiagram(problem::AbstractSirenProblem; kwargs...)
     throw(ArgumentError(
