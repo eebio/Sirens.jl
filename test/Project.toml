@@ -29,6 +29,7 @@ TrixiParticles = "66699cd8-9c01-4e9d-a059-b96c86d16b3a"
 [compat]
 Aqua = "0.8"
 DomainSets = "0.7.16, 0.8"
+JET = "0.12.1"
 ModelingToolkit = "10.26.0, 11.10"
 OrdinaryDiffEq = "6.102.1, 7"
 OrdinaryDiffEqBDF = "2.4.1"
